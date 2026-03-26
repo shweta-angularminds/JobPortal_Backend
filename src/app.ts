@@ -1,7 +1,9 @@
+import dotenv from "dotenv";
 
+dotenv.config();
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+
 import path from "path";
 
 
@@ -15,7 +17,6 @@ import downloadRouter from "./routers/download.router";
 import { dbConnect } from "./configs/database.config";
 
 
-dotenv.config();
 
 dbConnect();
 

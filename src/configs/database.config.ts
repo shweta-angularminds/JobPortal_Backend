@@ -1,3 +1,7 @@
+
+import dotenv from "dotenv";
+
+dotenv.config();
 import { connect, ConnectOptions } from "mongoose";
 
 export const dbConnect = () => {
