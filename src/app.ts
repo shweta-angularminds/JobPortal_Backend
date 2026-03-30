@@ -22,19 +22,6 @@ dbConnect();
 
 
 const app = express();
-
-
-app.use("/uploads", (req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  next();
-});
-
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-
 app.use(express.json());
 
 const corsOptions = {

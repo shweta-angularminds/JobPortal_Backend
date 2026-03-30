@@ -13,6 +13,10 @@ import jwt from "jsonwebtoken";
 import JobSeekerDetailsModel from "../models/jobseeker_details.model";
 import UserModel from "../models/user.model";
 
+interface MulterRequest extends Request {
+  file: Express.Multer.File;
+}
+
 export const employerLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try {
@@ -64,7 +68,10 @@ export const employerLogin = async (req: Request, res: Response) => {
   }
 };
 
-export const employerRegister = async (req: Request, res: Response) => {
+export const employerRegister = async (
+  req: Request & { file?: Express.Multer.File },
+  res: Response,
+) => {
   const {
     employer_name,
     email,
@@ -108,6 +115,7 @@ export const employerRegister = async (req: Request, res: Response) => {
 
     return res.status(STATUS_CREATED).json({
       message: "Employer registered successfully!",
+      logoUrl: req.file.path,
     });
   } catch (error: any) {
     if (error.code === STATUS_DUPLICATE_KEY_ERROR) {
@@ -124,6 +132,8 @@ export const employerRegister = async (req: Request, res: Response) => {
 };
 
 export const jobseekerRegister = async (req: Request, res: Response) => {
+  
+  
   const { username, phone, email, password } = req.body;
 
   const fresher = req.body.fresher === "true";
@@ -175,8 +185,9 @@ export const jobseekerRegister = async (req: Request, res: Response) => {
     res
       .status(STATUS_CREATED)
       .json({ message: "User registered successfully", user: newUser });
-  } catch (err) {
-    res.status(STATUS_INTERNAL_SERVER_ERROR).json({ error: err, message: err });
+  } catch (err:any) {
+    
+    res.status(STATUS_INTERNAL_SERVER_ERROR).json({ error: err, message: err.message });
   }
 };
 
@@ -233,3 +244,4 @@ export const jobseekerLogin = async (req: Request, res: Response) => {
       .json({ message: "Unknown error occured", error: error });
   }
 };
+ 

@@ -10,6 +10,10 @@ import { employerModel } from "../models/employer.model";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
+interface MulterRequest extends Request {
+  file: Express.Multer.File;
+}
+
 export const employerProfile = async (req: Request, res: Response) => {
   try {
     res.status(STATUS_OK).json({ user: req.user });
@@ -20,7 +24,10 @@ export const employerProfile = async (req: Request, res: Response) => {
   }
 };
 
-export const updateEmployerDetails = async (req: Request, res: Response) => {
+export const updateEmployerDetails = async (
+  req: Request & { file?: Express.Multer.File },
+  res: Response,
+) => {
   const user = req.user;
   if (!user || !user.id) {
     return res
@@ -82,8 +89,8 @@ export const updateEmployerDetails = async (req: Request, res: Response) => {
         address: address,
         website: website,
       },
-      { new: true }
-    );
+      { new: true },
+    ).select("-password");
 
     if (!updatedEmployer) {
       return res
@@ -111,7 +118,7 @@ export const updateEmployerDetails = async (req: Request, res: Response) => {
         companyLogo: updatedEmployer.companyLogo,
       },
       secretKey,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     res.status(STATUS_OK).json({

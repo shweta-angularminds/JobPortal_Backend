@@ -1,7 +1,7 @@
 import { Router } from "express";
-import uploadFile from "../middleware/file.multer";
+
 import authenticateUserToken from "../middleware/userAuth.middleware";
-import upload from "../middleware/multer.middleware";
+
 import {
   deleteProfilePicture,
   getProfile,
@@ -9,6 +9,8 @@ import {
   updateProfilePicture,
   updateResume,
 } from "../controllers/user.controller";
+import uploadResume from "../middleware/uploadResume";
+import uploadImage from "../middleware/uploadImage";
 
 const router = Router();
 
@@ -19,11 +21,11 @@ router.patch("/update-profile", authenticateUserToken, updateProfile);
 router.patch(
   "/upload-pic",
   authenticateUserToken,
-  upload("profilePic"),
+  uploadImage("profilePic"),
   updateProfilePicture
 );
 
-router.patch("/:user_id/update-resume", uploadFile, updateResume);
+router.patch("/:user_id/update-resume", uploadResume, updateResume);
 
 router.delete(
   "/delete-profile-pic",

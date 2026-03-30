@@ -3,7 +3,7 @@ dotenv.config();
 
 import { Router } from "express";
 import authenticateToken from "../middleware/auth.middleware";
-import upload from "../middleware/multer.middleware";
+
 import {
   changePassword,
   employerProfile,
@@ -11,6 +11,7 @@ import {
   getEmployerById,
   updateEmployerDetails,
 } from "../controllers/employer.controller";
+import uploadImage from "../middleware/uploadImage";
 
 const router = Router();
 
@@ -19,7 +20,7 @@ router.get("/profile", authenticateToken, employerProfile);
 router.put(
   "/profile/update",
   authenticateToken,
-  upload("companyLogo"),
+  uploadImage("companyLogo"),
   updateEmployerDetails
 );
 
