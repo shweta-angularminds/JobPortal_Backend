@@ -8,9 +8,14 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     
 
+    const ext = file.originalname.split(".").pop();
+
     return {
       folder: "jobportal/resumes",
       resource_type: "raw",
+
+      public_id: `resume_${Date.now()}.${ext}`,
+      format: ext,
       allowed_formats: ["pdf", "doc", "docx"],
     };
   },

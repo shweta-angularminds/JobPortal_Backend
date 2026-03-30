@@ -224,9 +224,9 @@ export const updateResume = async (req: Request, res: Response) => {
 
     const updateData: any = {};
 
-    if (req.file) {
+   if (req.file) {
       updateData.resume = req.file.path;
-    }
+   } 
 
     const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, {
       new: true,
