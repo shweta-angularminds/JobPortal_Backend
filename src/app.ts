@@ -25,7 +25,7 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-  origin: "http://localhost:4200",
+  origin: ["http://localhost:4200", "https://skillsetworks.netlify.app"],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
