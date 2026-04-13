@@ -7,14 +7,19 @@ import {
   getAllJobs,
   getJobByCompany,
   getJobDetails,
+  getJobs,
   updateJobDetails,
 } from "../controllers/job.controller";
 
 const router = Router();
 
+router.get("/find", getJobs);
+
 router.get("/company/:id", getJobByCompany);
 
 router.get("/:id", getJobDetails);
+
+
 
 // BELOW ROUTES ARE FOR EMPLOYERS TO PERFORM CRUD ON JOBS
 

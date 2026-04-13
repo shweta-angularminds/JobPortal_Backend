@@ -173,8 +173,15 @@ export const changePassword = async (req: Request, res: Response) => {
 
 export const getAllEmployers = async (req: Request, res: Response) => {
   try {
+    const {search} = req.query
+
+    let query:any = {}
+    if(search){
+      query.companyName = {$regex:search,$options:"i"}
+    }
+
     const employers = await employerModel
-      .find()
+      .find(query)
       .select("-password -createdAt -updatedAt -__v");
     if (!employers || employers.length === 0) {
       return res
