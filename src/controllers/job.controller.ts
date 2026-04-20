@@ -109,7 +109,7 @@ export const getJobs = async (req: Request, res: Response) => {
       search = "",
       location = "",
       experience = "",
-      jobType = "",
+      employementType = "",
       page = "1",
       limit = "10",
     } = req.query;
@@ -138,8 +138,8 @@ export const getJobs = async (req: Request, res: Response) => {
     }
 
     
-    if (jobType) {
-      query.jobType = jobType;
+    if (employementType) {
+      query.employementType = employementType;
     }
 
     const jobs = await jobModel
