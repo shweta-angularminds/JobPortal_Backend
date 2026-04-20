@@ -104,43 +104,60 @@ export const getAllJobs = async (req: Request, res: Response) => {
 };
 
 export const getJobs = async (req: Request, res: Response) => {
-
-
   try {
-    const { search = "", page = "1", limit = "10" } = req.query;
+    const {
+      search = "",
+      location = "",
+      experience = "",
+      jobType = "",
+      page = "1",
+      limit = "10",
+    } = req.query;
 
     const pageNumber = parseInt(page as string);
     const limitNumber = parseInt(limit as string);
 
     let query: any = {};
+
+   
     if (search) {
-      query = {
-        $or: [
-          { designation: { $regex: search, $options: "i" } },
-          { skills: { $regex: search, $options: "i" } },
-        ],
-      };
+      query.$or = [
+        { designation: { $regex: search, $options: "i" } },
+        { skills: { $regex: search, $options: "i" } },
+      ];
     }
+
+    
+    if (location) {
+      query.location = location;
+    }
+
+ 
+    if (experience) {
+      query.experience = experience;
+    }
+
+    
+    if (jobType) {
+      query.jobType = jobType;
+    }
+
     const jobs = await jobModel
       .find(query)
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
       .sort({ createdAt: -1 });
 
-    const total = await jobModel.countDocuments(query)
+    const total = await jobModel.countDocuments(query);
 
     res.json({
-      data:jobs,
+      data: jobs,
       total,
-      page:pageNumber,
-      totalPages:Math.ceil(total/limitNumber)
-    })
-
-
-
+      page: pageNumber,
+      totalPages: Math.ceil(total / limitNumber),
+    });
   } catch (error) {
-
-    res.status(STATUS_INTERNAL_SERVER_ERROR).json({message:"Internal Server Error"})
+    res.status(STATUS_INTERNAL_SERVER_ERROR).json({ message: "Internal Server Error" });
   }
 };
 
