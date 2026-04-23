@@ -193,7 +193,7 @@ export const updateSkills = async (req: Request, res: Response) => {
     const { skill } = req.body;
     const data = await JobSeekerDetailsModel.updateOne(
       { User_id: id },
-      { $pull: { skills: skill } }
+      { $pull: { skills: skill } },
     );
 
     if (!data) {
@@ -253,7 +253,7 @@ export const getLanguages = async (req: Request, res: Response) => {
   try {
     const id = req.params.userId;
     const data = await JobSeekerDetailsModel.find({ User_id: id }).select(
-      "languages"
+      "languages",
     );
     return res.status(STATUS_OK).send(data);
   } catch (error) {
@@ -269,7 +269,7 @@ export const deleteLanguage = async (req: Request, res: Response) => {
     const { language } = req.body;
     const data = await JobSeekerDetailsModel.updateOne(
       { User_id: id },
-      { $pull: { languages: language } }
+      { $pull: { languages: language } },
     );
 
     if (!data) {
@@ -373,7 +373,7 @@ export const updatePreference = async (req: Request, res: Response) => {
           "kolkata",
           "gurgaon",
           "ahemdabad",
-        ].includes(item)
+        ].includes(item),
       )
     ) {
       return res
@@ -417,5 +417,123 @@ export const updatePreference = async (req: Request, res: Response) => {
     return res
       .status(STATUS_INTERNAL_SERVER_ERROR)
       .json({ message: "Internal server error", error: error });
+  }
+};
+
+export const addExperience = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res
+        .status(STATUS_BAD_REQUEST)
+        .json({ message: "Unauthorized user" });
+    }
+    const experienceData = req.body;
+
+    console.log(experienceData);
+    const jobSeeker = await JobSeekerDetailsModel.findOne({
+      User_id: user.id,
+    });
+    if (!jobSeeker) {
+      return res
+        .status(STATUS_NOT_FOUND)
+        .json({ message: "Profile not found" });
+    }
+    jobSeeker.experience.push(experienceData);
+    await jobSeeker.save();
+    res.status(STATUS_OK).json({
+      message: "Experience added successfully",
+      data: jobSeeker.experience,
+    });
+  } catch (error) {
+    res
+      .status(STATUS_INTERNAL_SERVER_ERROR)
+      .json({ message: "Server error", error });
+  }
+};
+
+export const updateExperience = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const { expId } = req.params;
+    const updatedData = req.body;
+
+    const jobSeeker = await JobSeekerDetailsModel.findOne({
+      User_id: user?.id,
+    });
+    if (!jobSeeker) {
+      return res
+        .status(STATUS_NOT_FOUND)
+        .json({ message: "Profile not found" });
+    }
+    const experience = jobSeeker.experience.find(
+      (exp: any) => exp._id.toString() === expId,
+    );
+    if (!experience) {
+      return res
+        .status(STATUS_NOT_FOUND)
+        .json({ message: "Experience not found" });
+    }
+
+    Object.assign(experience, updatedData);
+
+    await jobSeeker.save();
+
+    res.status(STATUS_OK).json({
+      message: "Experience updated successfully",
+      data: jobSeeker.experience,
+    });
+  } catch (error) {
+    res
+      .status(STATUS_INTERNAL_SERVER_ERROR)
+      .json({ message: "Server error", error });
+  }
+};
+
+export const deleteExperience = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const { expId } = req.params;
+
+    if (!user) {
+      return res
+        .status(STATUS_BAD_REQUEST)
+        .json({ message: "Unauthorized user" });
+    }
+
+    const jobSeeker = await JobSeekerDetailsModel.findOne({
+      User_id: user.id,
+    });
+
+    if (!jobSeeker) {
+      return res
+        .status(STATUS_NOT_FOUND)
+        .json({ message: "Profile not found" });
+    }
+
+    const initialLength = jobSeeker.experience.length;
+
+    jobSeeker.experience = jobSeeker.experience.filter((exp: any) => {
+      return exp._id.toString() !== String(expId);
+    });
+
+    if (jobSeeker.experience.length === initialLength) {
+      return res
+        .status(STATUS_NOT_FOUND)
+        .json({ message: "Experience not found" });
+    }
+
+    jobSeeker.markModified("experience");
+
+    await jobSeeker.save();
+
+    res.status(STATUS_OK).json({
+      message: "Experience deleted successfully",
+    });
+  } catch (error) {
+    res
+      .status(STATUS_INTERNAL_SERVER_ERROR)
+      .json({ message: "Server error", error });
   }
 };

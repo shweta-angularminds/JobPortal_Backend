@@ -1,17 +1,21 @@
 import { Router } from "express";
 import {
   addEducation,
+  addExperience,
   addLanguage,
   addSkills,
+  deleteExperience,
   deleteLanguage,
   getEducationDetails,
   getJobseekerDetails,
   getLanguages,
   updateEducationDetails,
+  updateExperience,
   updatePreference,
   updateSkills,
   updateSummary,
 } from "../controllers/jobseeker.controller";
+import authenticateUserToken from "../middleware/userAuth.middleware";
 
 const router = Router();
 
@@ -37,5 +41,10 @@ router.patch("/:userId/summary", updateSummary);
 
 //  PREFERENCE ROUTES
 router.patch("/:user_Id/preference", updatePreference);
+
+//  EXPERIENCE ROUTES
+router.post("/experience",authenticateUserToken,addExperience)
+router.put("/experience/:expId", authenticateUserToken, updateExperience);
+router.delete("/experience/:expId", authenticateUserToken, deleteExperience);
 
 export default router;

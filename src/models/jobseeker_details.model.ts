@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import {
+  Experience,
   InternShip,
   Jobseeker_details,
   Preference,
@@ -129,6 +130,50 @@ const InternshipSchema = new Schema<InternShip>(
   }
 );
 
+
+const ExperienceSchema = new Schema<Experience>({
+  companyName:{
+    type:String,
+    required:true,
+  },
+  jobTitle:{
+    type:String,
+    required:true,
+  },
+  location:{
+    type:String,
+    default:'',
+  },
+  employmentType:{
+    type:String,
+    enum:["Full-time","Part-time","Internship","Contract"]
+  },
+  startDate:{
+    type:Date,
+    required:true,
+  },
+  endDate:{
+    type:Date
+  },
+  isCurrentJob:{
+    type:Boolean,
+    default:false,
+  },
+  description:
+  {
+    type:String,
+    default:""
+  },
+  technologiesUsed:{
+    type:[String],
+    default:[]
+  },
+  achievements:{
+    type:[String],
+    default:[]
+  }
+})
+
 // Main schema for JobseekerDetails
 export const JobSeekerDetailsSchema = new Schema<Jobseeker_details>(
   {
@@ -153,6 +198,10 @@ export const JobSeekerDetailsSchema = new Schema<Jobseeker_details>(
     },
     internship: InternshipSchema,
     preference: PreferenceSchema,
+    experience:{
+      type:[ExperienceSchema],
+      default:[]
+    }
   },
   {
     timestamps: true,

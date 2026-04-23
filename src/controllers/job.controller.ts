@@ -34,13 +34,7 @@ export const getJobByCompany = async (req: Request, res: Response) => {
         .send({ message: "Invalid limit value" });
     }
 
-    const jobs = await jobModel.find(query).select("-__v").limit(limitValue);
-
-    if (!jobs || jobs.length === 0) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .send({ message: "Not Found Any Job" });
-    }
+    const jobs = await jobModel.find(query).select("-__v").limit(limitValue);    
 
     return res.status(STATUS_OK).send(jobs);
   } catch (error) {

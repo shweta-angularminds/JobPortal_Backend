@@ -183,11 +183,7 @@ export const getAllEmployers = async (req: Request, res: Response) => {
     const employers = await employerModel
       .find(query)
       .select("-password -createdAt -updatedAt -__v");
-    if (!employers || employers.length === 0) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "No employers found" });
-    }
+    
     res.json(employers);
   } catch (error) {
     return res

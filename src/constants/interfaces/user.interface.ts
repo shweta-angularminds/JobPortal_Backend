@@ -18,9 +18,22 @@ export interface Jobseeker_details {
   education: Education;
   languages: string[];
   skills: string[];
-  summary:string;
-  internship:InternShip;
-  preference:Preference;
+  summary: string;
+  internship: InternShip;
+  preference: Preference;
+  experience: Experience[];
+}
+export interface Experience {
+  companyName: string;
+  jobTitle: string;
+  location?: string;
+  employmentType?: "Full-time" | "Part-time" | "Internship" | "Contract";
+  startDate: Date;
+  endDate?: Date;
+  isCurrentJob?: boolean;
+  description?: string;
+  technologiesUsed?: string[];
+  achievements?: string[];
 }
 export interface InternShip{
   project_name:string;
