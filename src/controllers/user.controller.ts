@@ -74,7 +74,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         profilePic: updatedUser.profilePic,
       },
       secretKey,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     res.status(STATUS_OK).json({
@@ -142,7 +142,7 @@ export const updateProfilePicture = async (req: Request, res: Response) => {
         profilePic: updatedUser.profilePic,
       },
       secretKey,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     res.status(STATUS_OK).json({
@@ -171,7 +171,7 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
     const updatedUser = await UserModel.findByIdAndUpdate(
       userId,
       { $unset: { profilePic: "" } },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedUser) {
@@ -198,7 +198,7 @@ export const deleteProfilePicture = async (req: Request, res: Response) => {
         profilePic: updatedUser.profilePic,
       },
       secretKey,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     return res
@@ -224,9 +224,9 @@ export const updateResume = async (req: Request, res: Response) => {
 
     const updateData: any = {};
 
-   if (req.file) {
+    if (req.file) {
       updateData.resume = req.file.path;
-   } 
+    }
 
     const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, {
       new: true,
@@ -235,10 +235,32 @@ export const updateResume = async (req: Request, res: Response) => {
     if (!updatedUser) {
       return res.status(STATUS_NOT_FOUND).json({ message: "User not found" });
     }
+    const secretKey = process.env.SECRET_KEY;
+    if (!secretKey) {
+      return res.status(500).json({
+        message: "SECRET_KEY is missing in environment variables",
+      });
+    }
+    const token = jwt.sign(
+      {
+        id: updatedUser._id,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        location: updatedUser.location,
+        contactNumber: updatedUser.phone,
+        bdate: updatedUser.bdate,
+        gender: updatedUser.gender,
+        profilePic: updatedUser.profilePic,
+        resume: updatedUser.resume, // ⭐ ADD THIS
+      },
+      secretKey,
+      { expiresIn: "1d" },
+    );
 
     res.status(STATUS_OK).json({
       message: "Resume updated successfully",
       user: updatedUser,
+      token,
     });
   } catch (error) {
     res.status(STATUS_INTERNAL_SERVER_ERROR).send({

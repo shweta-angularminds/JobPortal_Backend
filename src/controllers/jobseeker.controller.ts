@@ -341,6 +341,7 @@ export const updatePreference = async (req: Request, res: Response) => {
     if (
       join_time &&
       ![
+        "immediate",
         "15 days",
         "1 month",
         "2 months",
@@ -469,6 +470,7 @@ export const updateExperience = async (req: Request, res: Response) => {
     }
     const experience = jobSeeker.experience.find(
       (exp: any) => exp._id.toString() === expId,
+  
     );
     if (!experience) {
       return res
