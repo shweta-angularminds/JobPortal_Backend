@@ -30,7 +30,8 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     const userId = user.id;
     const { email, phone, username, bdate, gender, location } = req.body;
-    const userData = UserModel.findById(userId);
+
+    const userData = await UserModel.findById(userId);
 
     if (!userData) {
       return res.status(STATUS_NOT_FOUND).json({
@@ -47,13 +48,18 @@ export const updateProfile = async (req: Request, res: Response) => {
     if (gender) updateData.gender = gender;
     if (location) updateData.location = location;
 
-    const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, {
-      new: true,
-    }).select("-password -__v -createdAt -updatedAt");
+    // ✅ update only profile fields
+    await UserModel.findByIdAndUpdate(userId, updateData);
 
-    if (!updatedUser) {
+    // 🔥 IMPORTANT: re-fetch FULL latest user (includes resume)
+    const freshUser = await UserModel.findById(userId).select(
+      "-password -__v -createdAt -updatedAt",
+    );
+
+    if (!freshUser) {
       return res.status(STATUS_NOT_FOUND).json({ message: "User not found" });
     }
+
     const secretKey = process.env.SECRET_KEY;
 
     if (!secretKey) {
@@ -64,28 +70,29 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       {
-        id: updatedUser._id,
-        email: updatedUser.email,
-        username: updatedUser.username,
-        location: updatedUser.location,
-        contactNumber: updatedUser.phone,
-        bdate: updatedUser.bdate,
-        gender: updatedUser.gender,
-        profilePic: updatedUser.profilePic,
+        id: freshUser._id,
+        email: freshUser.email,
+        username: freshUser.username,
+        location: freshUser.location,
+        contactNumber: freshUser.phone,
+        bdate: freshUser.bdate,
+        gender: freshUser.gender,
+        profilePic: freshUser.profilePic,
+        resume: freshUser.resume, // ✅ ALWAYS INCLUDED
       },
       secretKey,
       { expiresIn: "1d" },
     );
 
-    res.status(STATUS_OK).json({
+    return res.status(STATUS_OK).json({
       message: "User profile updated successfully",
-      user: updatedUser,
+      user: freshUser,
       token,
     });
   } catch (error) {
     return res
       .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error", error: error });
+      .json({ message: "Internal Server Error", error });
   }
 };
 
