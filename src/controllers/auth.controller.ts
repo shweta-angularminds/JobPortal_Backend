@@ -10,14 +10,12 @@ import { employerModel } from "../models/employer.model";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import JobSeekerDetailsModel from "../models/jobseeker_details.model";
-import UserModel from "../models/user.model";
-import { loginUser } from "../services/auth.service";
-import { generateAccessToken } from "../utils/jwt.utils";
 
-interface MulterRequest extends Request {
-  file: Express.Multer.File;
-}
+import { jobSeekerLoginService, jobSeekerRegisterService } from "../services/auth.service";
+import { generateAccessToken } from "../utils/jwt.utils";
+import { asyncHandler } from "../utils/asyncHandler";
+
+
 
 export const employerLogin = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -133,70 +131,32 @@ export const employerRegister = async (
   }
 };
 
-export const jobseekerRegister = async (req: Request, res: Response) => {
-  const { username, phone, email, password } = req.body;
-
-  const fresher = req.body.fresher === "true";
-
-  const resumeFile = req.file;
-
-  try {
-    if (!username || !password || !phone || !email || !resumeFile) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "All fields are required" });
-    }
-
-    const userExists = await UserModel.findOne({ email });
-
-    if (userExists) {
-      return res
-        .status(STATUS_DUPLICATE_KEY_ERROR)
-        .json({ error: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new UserModel({
-      username,
-      phone,
-      email,
+export const jobseekerRegister = asyncHandler(
+  async (req: Request, res: Response) => {
+    const fresher = req.body.fresher === "true";
+  
+    const user = await jobSeekerRegisterService({
+      username: req.body.username,
+      phone: req.body.phone,
+      email: req.body.email,
+      password: req.body.password,
       fresher,
-      password: hashedPassword,
-      resume: resumeFile ? resumeFile.path : "",
+      resume: req.file?.path,
     });
 
-    const savedUser = await newUser.save();
-
-    const newJobSeekerDetails = new JobSeekerDetailsModel({
-      User_id: savedUser._id,
-      languages: [],
-      skills: [],
-      education: {},
-      summary: "",
-      internship: {},
-      preference: {},
+    return res.status(STATUS_CREATED).json({
+      success: true,
+      message: "User registered successfully",
+      data: user,
     });
+  },
+);
 
-    newJobSeekerDetails.education = {};
-
-    await newJobSeekerDetails.save();
-
-    res
-      .status(STATUS_CREATED)
-      .json({ message: "User registered successfully", user: newUser });
-  } catch (err: any) {
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ error: err, message: err.message });
-  }
-};
-
-export const jobseekerLogin = async (req: Request, res: Response) => {
-  try {
+export const jobseekerLogin = asyncHandler(
+  async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    const user = await loginUser(email, password);
+    const user = await jobSeekerLoginService(email, password);
 
     const token = generateAccessToken({
       sub: user._id.toString(),
@@ -208,17 +168,5 @@ export const jobseekerLogin = async (req: Request, res: Response) => {
       message: "Login successful!",
       token: token,
     });
-  } catch (error) {
-    if (error instanceof Error && error.message === "INVALID_CREDENTIALS") {
-      return res.status(STATUS_UNAUTHORIZED).json({
-        success: false,
-        message: "Invalid email or password",
-      });
-    }
-
-    return res.status(STATUS_INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
+  },
+);

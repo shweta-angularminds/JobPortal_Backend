@@ -13,6 +13,14 @@ export interface User {
   profilePic?: string;
 }
 
+export interface jobseekerRegisterDto{
+  username:string;
+  phone:string;
+  email:string;
+  password:string;
+  fresher:boolean;
+  resume?:string;
+}
 
 
 export interface UpdateProfileDto {

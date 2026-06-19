@@ -1,15 +1,13 @@
-import cloudinary from "../configs/cloudinary.config";
 import { UpdateProfileDto } from "../constants/interfaces/user.interface";
 import { STATUS_NOT_FOUND } from "../constants/status/http.status";
+import { USER_FIELDS_TO_EXCLUDE } from "../constants/user.constants";
 import UserModel from "../models/user.model";
 import { AppError } from "../utils/appError";
-import { extractPublicId } from "../utils/extractPublicId";
 import {
   deleteImageFromCloudinary,
   deleteRawFileFromCloudinary,
 } from "./cloudinary.service";
 
-const USER_FIELDS_TO_EXCLUDE = "-password -__v -createdAt -updatedAt";
 
 const findUserOrThrow = async (userId: string) => {
   const user = await UserModel.findById(userId).orFail(
@@ -54,7 +52,6 @@ export const updateProfilePictureService = async (
   const oldProfilePic = user.profilePic;
 
   user.profilePic = newProfilePic;
-
   await user.save();
 
   if (oldProfilePic) {
@@ -65,9 +62,10 @@ export const updateProfilePictureService = async (
 };
 
 export const deleteProfilePictureService = async (userId: string) => {
+ 
   const user = await findUserOrThrow(userId);
-
   const oldProfilePic = user.profilePic;
+
   user.profilePic = undefined;
 
   await user.save();
