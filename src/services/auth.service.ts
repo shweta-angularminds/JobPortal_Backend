@@ -47,12 +47,6 @@ export const jobSeekerRegisterService  = async(
 
   await JobSeekerDetailsModel.create({
     User_id:user._id,
-    languages:[],
-    skills:[],
-    education:{},
-    summary:"",
-    internship:{},
-    preference:{}
   })
   return UserModel.findById(user._id).select(USER_FIELDS_TO_EXCLUDE);
 }

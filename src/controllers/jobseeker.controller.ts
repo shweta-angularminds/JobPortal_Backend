@@ -6,6 +6,11 @@ import {
 } from "../constants/status/http.status";
 import JobSeekerDetailsModel from "../models/jobseeker_details.model";
 import { Request, Response } from "express";
+import { asyncHandler } from "../utils/asyncHandler";
+import {
+  getJobseekerDetailsService,
+  addEducationService,
+} from "../services/jobseekerDetails.service";
 
 type EducationField =
   | "X"
@@ -14,74 +19,34 @@ type EducationField =
   | "postgraduation"
   | "doctorate";
 
-export const getJobseekerDetails = async (req: Request, res: Response) => {
-  try {
-    const user_id = req.params.user_id;
-    const data = await JobSeekerDetailsModel.find({ User_id: user_id });
+export const getJobseekerDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    const details = await getJobseekerDetailsService(req.user!.id);
 
-    if (!data) {
-      return res.status(STATUS_OK).send([]);
-    }
+    return res.status(STATUS_OK).json({
+      success: true,
+      data: details,
+    });
+  },
+);
 
-    return res.status(STATUS_OK).send(data);
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal server error", error: error });
-  }
-};
+export const addEducation = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { educationField, educationData } = req.body;
 
-export const addEducation = async (req: Request, res: Response) => {
-  try {
-    const user_id = req.params.user_id;
-    const {
+    const updatedDetails = await addEducationService(
+      req.user!.id,
       educationField,
       educationData,
-    }: { educationField: EducationField; educationData: any } = req.body;
+    );
 
-    if (!educationField || !educationData) {
-      return res
-        .status(400)
-        .json({ message: "educationField and educationData are required" });
-    }
-
-    const existingJobSeeker = await JobSeekerDetailsModel.findOne({
-      User_id: user_id,
+    return res.status(STATUS_OK).json({
+      success: true,
+      message: "Education updated successfully",
+      data: updatedDetails,
     });
-
-    if (existingJobSeeker) {
-      if (!existingJobSeeker.education) {
-        existingJobSeeker.education = {};
-      }
-
-      existingJobSeeker.education[educationField] = educationData;
-
-      await existingJobSeeker.save();
-
-      return res.status(200).json({
-        message: "Job Seeker education updated successfully",
-        data: existingJobSeeker,
-      });
-    } else {
-      const newJobSeekerDetails = new JobSeekerDetailsModel({
-        User_id: user_id,
-        education: {
-          [educationField]: educationData,
-        },
-      });
-
-      const savedJobSeekerDetails = await newJobSeekerDetails.save();
-
-      return res.status(201).json({
-        message: "Job Seeker details created successfully",
-        data: savedJobSeekerDetails,
-      });
-    }
-  } catch (error) {
-    // console.error("Error in creating or updating job seeker details:", error);
-    return res.status(500).json({ message: "Server error", error });
-  }
-};
+  },
+);
 
 export const getEducationDetails = async (req: Request, res: Response) => {
   try {
@@ -102,51 +67,22 @@ export const getEducationDetails = async (req: Request, res: Response) => {
   }
 };
 
-export const updateEducationDetails = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.user_id;
-    const {
+export const updateEducationDetails = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { educationField, educationData } = req.body;
+
+    const updatedDetails = await addEducationService(
+      req.user!.id,
       educationField,
       educationData,
-    }: { educationField: EducationField; educationData: any } = req.body;
-
-    if (!educationField || !educationData) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "educationField and educationData are required" });
-    }
-
-    const existingJobSeeker = await JobSeekerDetailsModel.findOne({
-      User_id: id,
+    );
+    return res.status(STATUS_OK).json({
+      success: true,
+      message: "Education updated successfully",
+      data: updatedDetails,
     });
-
-    if (!existingJobSeeker) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "User not found", result: [] });
-    }
-
-    if (
-      existingJobSeeker.education &&
-      educationField in existingJobSeeker.education
-    ) {
-      existingJobSeeker.education[educationField] = educationData;
-    } else {
-      return res.status(STATUS_BAD_REQUEST).json({
-        message: `${educationField} education field not found`,
-        data: existingJobSeeker.education,
-      });
-    }
-
-    await existingJobSeeker.save();
-
-    return res.status(STATUS_OK).json({ message: "Updated Successfully!" });
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error", error: error });
-  }
-};
+  },
+);
 
 export const addSkills = async (req: Request, res: Response) => {
   const { userId } = req.params;
@@ -470,7 +406,6 @@ export const updateExperience = async (req: Request, res: Response) => {
     }
     const experience = jobSeeker.experience.find(
       (exp: any) => exp._id.toString() === expId,
-  
     );
     if (!experience) {
       return res

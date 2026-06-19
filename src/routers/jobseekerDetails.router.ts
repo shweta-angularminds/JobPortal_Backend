@@ -16,16 +16,45 @@ import {
   updateSummary,
 } from "../controllers/jobseeker.controller";
 import authenticateUserToken from "../middleware/userAuth.middleware";
+import authenticateToken, {
+  authorizeRoles,
+} from "../middleware/auth.middleware";
+import { addEducationValidator } from "../validations/jobseekerDetails.validator";
+import { validateRequest } from "../middleware/validation.middleware";
 
 const router = Router();
 
 /* GET ALL DETAILS ROUTE */
-router.get("/:user_id/details", getJobseekerDetails);
+router.get(
+  "/details",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  getJobseekerDetails,
+);
 
 // EDUCATION ROUTES
-router.post("/:user_id/education", addEducation);
-router.get("/fetch/:user_id/education", getEducationDetails);
-router.put("/:user_id/education", updateEducationDetails);
+router.post(
+  "/education",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  addEducationValidator,
+  validateRequest,
+  addEducation,
+);
+// router.get(
+//   "/fetch/education",
+//   authenticateToken,
+//   authorizeRoles("jobseeker"),
+//   getEducationDetails,
+// );
+router.patch(
+  "/education",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  addEducationValidator,
+  validateRequest,
+  updateEducationDetails,
+);
 
 //  SKILLS ROUTES
 router.post("/:userId/skills", addSkills);
@@ -43,7 +72,7 @@ router.patch("/:userId/summary", updateSummary);
 router.patch("/:user_Id/preference", updatePreference);
 
 //  EXPERIENCE ROUTES
-router.post("/experience",authenticateUserToken,addExperience)
+router.post("/experience", authenticateUserToken, addExperience);
 router.put("/experience/:expId", authenticateUserToken, updateExperience);
 router.delete("/experience/:expId", authenticateUserToken, deleteExperience);
 
