@@ -9,3 +9,21 @@ export const addEducationValidator = [
 
   body("educationData").notEmpty().withMessage("Education data is required"),
 ];
+
+export const addSkillValidator = [
+  body("skill")
+    .trim()
+    .notEmpty()
+    .withMessage("Skill is required")
+    .isLength({ min: 2, max: 50 })
+    .withMessage("Skill must be between 2 to 50 characters"),
+];
+
+export const languageValidator = [
+  body("language")
+    .trim()
+    .notEmpty()
+    .withMessage("Language is required")
+    .isLength({ min: 2, max: 30 })
+    .withMessage("Language must be between 2 and 30 characters"),
+];

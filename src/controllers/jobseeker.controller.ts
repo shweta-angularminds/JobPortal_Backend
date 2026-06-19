@@ -10,6 +10,10 @@ import { asyncHandler } from "../utils/asyncHandler";
 import {
   getJobseekerDetailsService,
   addEducationService,
+  addSkillService,
+  deleteSkillService,
+  addLanguageService,
+  deleteLanguageService,
 } from "../services/jobseekerDetails.service";
 
 type EducationField =
@@ -32,7 +36,13 @@ export const getJobseekerDetails = asyncHandler(
 
 export const addEducation = asyncHandler(
   async (req: Request, res: Response) => {
-    const { educationField, educationData } = req.body;
+    const {
+      educationField,
+      educationData,
+    }: {
+      educationField: EducationField;
+      educationData: any;
+    } = req.body;
 
     const updatedDetails = await addEducationService(
       req.user!.id,
@@ -43,184 +53,59 @@ export const addEducation = asyncHandler(
     return res.status(STATUS_OK).json({
       success: true,
       message: "Education updated successfully",
-      data: updatedDetails,
+      data: {
+        educationField,
+        education: updatedDetails.education[educationField],
+      },
     });
   },
 );
 
-export const getEducationDetails = async (req: Request, res: Response) => {
-  try {
-    const user_id = req.params.user_id;
-    const existingJobSeeker = await JobSeekerDetailsModel.findOne({
-      User_id: user_id,
-    });
+export const addSkills = asyncHandler(async (req: Request, res: Response) => {
+  const updatedDetails = await addSkillService(req.user!.id, req.body.skill);
+  return res.status(STATUS_OK).json({
+    success: true,
+    message: "Skill added successfully",
+    data: updatedDetails.skills,
+  });
+});
 
-    if (!existingJobSeeker) {
-      return res.status(404).json({ message: "User not found", result: [] });
-    }
-
-    return res.status(200).send(existingJobSeeker);
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: error });
-  }
-};
-
-export const updateEducationDetails = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { educationField, educationData } = req.body;
-
-    const updatedDetails = await addEducationService(
-      req.user!.id,
-      educationField,
-      educationData,
-    );
-    return res.status(STATUS_OK).json({
-      success: true,
-      message: "Education updated successfully",
-      data: updatedDetails,
-    });
-  },
-);
-
-export const addSkills = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+export const deleteSkill = asyncHandler(async (req: Request, res: Response) => {
   const { skill } = req.body;
 
-  if (!skill) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "skill is required" });
-  }
+  const skills = await deleteSkillService(req.user!.id, skill);
 
-  try {
-    const user = await JobSeekerDetailsModel.findOne({ User_id: userId });
+  return res.status(STATUS_OK).json({
+    success: true,
+    message: "Skill deleted successfully",
+    data: skills,
+  });
+});
 
-    if (!user) {
-      return res.status(STATUS_NOT_FOUND).json({ message: "User not found" });
-    }
+export const addLanguage = asyncHandler(async (req: Request, res: Response) => {
+  const languages = await addLanguageService(req.user!.id, req.body.language);
 
-    if (user.skills.includes(skill)) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Skill already exists in the user's skills" });
-    }
+  return res.status(STATUS_OK).json({
+    success: true,
+    message: "Language added successfully",
+    data: languages,
+  });
+});
 
-    user.skills.push(skill);
+export const deleteLanguage = asyncHandler(
+  async (req: Request, res: Response) => {
+    const languages = await deleteLanguageService(
+      req.user!.id,
+      req.body.language,
+    );
 
-    await user.save();
-
-    res.status(STATUS_OK).json({
-      message: "Skill added successfully",
-      skills: user.skills,
+    return res.status(STATUS_OK).json({
+      success: true,
+      message: "Language deleted successfully",
+      data: languages,
     });
-  } catch (error) {
-    // console.error("Error adding skill:", error);
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal server error", error: error });
-  }
-};
-
-export const updateSkills = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.userId;
-    const { skill } = req.body;
-    const data = await JobSeekerDetailsModel.updateOne(
-      { User_id: id },
-      { $pull: { skills: skill } },
-    );
-
-    if (!data) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Not Found User", data: data });
-    }
-
-    return res.status(STATUS_OK).json({ message: "Deleted succesfully!" });
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error", error: error });
-  }
-};
-
-export const addLanguage = async (req: Request, res: Response) => {
-  const { userId } = req.params;
-  const { language } = req.body;
-
-  if (!language) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Language is required" });
-  }
-
-  try {
-    const user = await JobSeekerDetailsModel.findOne({ User_id: userId });
-
-    if (!user) {
-      return res.status(STATUS_NOT_FOUND).json({ message: "User not found" });
-    }
-
-    if (user.languages.includes(language)) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Language already exists in the user's languages" });
-    }
-
-    user.languages.push(language);
-
-    await user.save();
-
-    res.status(STATUS_OK).json({
-      message: "Language added successfully",
-      languages: user.languages,
-    });
-  } catch (error) {
-    //console.error("Error adding language:", error);
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal server error", error: error });
-  }
-};
-
-export const getLanguages = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.userId;
-    const data = await JobSeekerDetailsModel.find({ User_id: id }).select(
-      "languages",
-    );
-    return res.status(STATUS_OK).send(data);
-  } catch (error) {
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error", error: error });
-  }
-};
-
-export const deleteLanguage = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.userId;
-    const { language } = req.body;
-    const data = await JobSeekerDetailsModel.updateOne(
-      { User_id: id },
-      { $pull: { languages: language } },
-    );
-
-    if (!data) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Not Found User", data: data });
-    }
-
-    return res.status(STATUS_OK).json({ message: "Deleted succesfully!" });
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error", error: error });
-  }
-};
+  },
+);
 
 export const updateSummary = async (req: Request, res: Response) => {
   try {

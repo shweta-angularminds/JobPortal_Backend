@@ -6,20 +6,21 @@ import {
   addSkills,
   deleteExperience,
   deleteLanguage,
-  getEducationDetails,
+  deleteSkill,
   getJobseekerDetails,
-  getLanguages,
-  updateEducationDetails,
   updateExperience,
   updatePreference,
-  updateSkills,
   updateSummary,
 } from "../controllers/jobseeker.controller";
 import authenticateUserToken from "../middleware/userAuth.middleware";
 import authenticateToken, {
   authorizeRoles,
 } from "../middleware/auth.middleware";
-import { addEducationValidator } from "../validations/jobseekerDetails.validator";
+import {
+  addEducationValidator,
+  addSkillValidator,
+  languageValidator,
+} from "../validations/jobseekerDetails.validator";
 import { validateRequest } from "../middleware/validation.middleware";
 
 const router = Router();
@@ -32,7 +33,7 @@ router.get(
   getJobseekerDetails,
 );
 
-// EDUCATION ROUTES
+/* EDUCATION ROUTES */
 router.post(
   "/education",
   authenticateToken,
@@ -41,29 +42,26 @@ router.post(
   validateRequest,
   addEducation,
 );
-// router.get(
-//   "/fetch/education",
-//   authenticateToken,
-//   authorizeRoles("jobseeker"),
-//   getEducationDetails,
-// );
-router.patch(
-  "/education",
+
+
+/*  SKILLS ROUTES  */
+router.post(
+  "/skills",
   authenticateToken,
   authorizeRoles("jobseeker"),
-  addEducationValidator,
+  addSkillValidator,
   validateRequest,
-  updateEducationDetails,
+  addSkills,
 );
 
-//  SKILLS ROUTES
-router.post("/:userId/skills", addSkills);
-router.put("/:userId/skills", updateSkills);
+router.delete("/skills",authenticateToken,
+  authorizeRoles("jobseeker"), deleteSkill);
 
-//  LANGUAGES ROUTES
-router.post("/:userId/language", addLanguage);
-router.get("/:userId/language", getLanguages);
-router.put("/:userId/language", deleteLanguage);
+/*  LANGUAGES ROUTES */
+router.post("/language", authenticateToken,authorizeRoles("jobseeker"),languageValidator, validateRequest, addLanguage);
+
+router.delete("/language", authenticateToken,authorizeRoles("jobseeker"), languageValidator, validateRequest, deleteLanguage);
+
 
 //  SUMMARY ROUTES
 router.patch("/:userId/summary", updateSummary);
