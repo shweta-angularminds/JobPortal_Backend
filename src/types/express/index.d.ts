@@ -1,9 +1,10 @@
-import express from "express";
+import { AuthenticatedUser } from "../../constants/interfaces/auth.interface";
 
 declare global {
   namespace Express {
      export interface Request {
-      user?: Record<string, any>;
-    }
+       user?: AuthenticatedUser;
+     }
   }
 }
+export {};

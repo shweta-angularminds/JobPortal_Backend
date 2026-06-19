@@ -12,6 +12,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import JobSeekerDetailsModel from "../models/jobseeker_details.model";
 import UserModel from "../models/user.model";
+import { loginUser } from "../services/auth.service";
+import { generateAccessToken } from "../utils/jwt.utils";
 
 interface MulterRequest extends Request {
   file: Express.Multer.File;
@@ -54,7 +56,7 @@ export const employerLogin = async (req: Request, res: Response) => {
       secretKey,
       {
         expiresIn: "6h",
-      }
+      },
     );
 
     res.status(STATUS_OK).json({
@@ -132,8 +134,6 @@ export const employerRegister = async (
 };
 
 export const jobseekerRegister = async (req: Request, res: Response) => {
-  
-  
   const { username, phone, email, password } = req.body;
 
   const fresher = req.body.fresher === "true";
@@ -185,63 +185,40 @@ export const jobseekerRegister = async (req: Request, res: Response) => {
     res
       .status(STATUS_CREATED)
       .json({ message: "User registered successfully", user: newUser });
-  } catch (err:any) {
-    
-    res.status(STATUS_INTERNAL_SERVER_ERROR).json({ error: err, message: err.message });
+  } catch (err: any) {
+    res
+      .status(STATUS_INTERNAL_SERVER_ERROR)
+      .json({ error: err, message: err.message });
   }
 };
 
 export const jobseekerLogin = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
   try {
-    const user = await UserModel.findOne({ email: email });
+    const { email, password } = req.body;
 
-    if (!user) {
-      return res.status(STATUS_UNAUTHORIZED).send("User not found!");
-    }
+    const user = await loginUser(email, password);
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(STATUS_UNAUTHORIZED).send("Invalid Password!");
-    }
-
-    const secretKey = process.env.SECRET_KEY;
-
-    if (!secretKey) {
-      return res
-        .status(STATUS_INTERNAL_SERVER_ERROR)
-        .send("Secret key is missing from environment variables");
-    }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        contactNumber: user.phone,
-        fresher: user.fresher,
-        resume: user.resume,
-        location: user.location,
-        gender: user.gender,
-        bdate: user.bdate,
-        profilePic: user.profilePic,
-      },
-      secretKey,
-      {
-        expiresIn: "1d",
-      }
-    );
+    const token = generateAccessToken({
+      sub: user._id.toString(),
+      role: "jobseeker",
+    });
 
     res.status(STATUS_OK).json({
+      success: true,
       message: "Login successful!",
       token: token,
     });
   } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Unknown error occured", error: error });
+    if (error instanceof Error && error.message === "INVALID_CREDENTIALS") {
+      return res.status(STATUS_UNAUTHORIZED).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    return res.status(STATUS_INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
- 

@@ -13,6 +13,19 @@ export interface User {
   profilePic?: string;
 }
 
+
+
+export interface UpdateProfileDto {
+  email?: string;
+  phone?: string;
+  username?: string;
+  bdate?: Date;
+  gender?: "male" | "female" | "other";
+  location?: string;
+  fresher?: boolean;
+}
+
+
 export interface Jobseeker_details {
   User_id: ObjectId;
   education: Education;

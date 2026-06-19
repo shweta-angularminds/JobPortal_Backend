@@ -1,7 +1,5 @@
 import { Router } from "express";
 
-import authenticateUserToken from "../middleware/userAuth.middleware";
-
 import {
   deleteProfilePicture,
   getProfile,
@@ -11,26 +9,55 @@ import {
 } from "../controllers/user.controller";
 import uploadResume from "../middleware/uploadResume";
 import uploadImage from "../middleware/uploadImage";
+import authenticateToken, {
+  authorizeRoles,
+} from "../middleware/auth.middleware";
+import { updateProfileValidator } from "../validations/user.validator";
+import { validateRequest } from "../middleware/validation.middleware";
+import { validateProfilePicture } from "../validations/profilePicture.validator";
+import { validateResume } from "../validations/resume.validator";
 
 const router = Router();
 
-router.get("/profile", authenticateUserToken, getProfile);
+router.get(
+  "/profile",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  getProfile,
+);
 
-router.patch("/update-profile", authenticateUserToken, updateProfile);
+router.patch(
+  "/update-profile",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  updateProfileValidator,
+  validateRequest,
+  updateProfile,
+);
 
 router.patch(
   "/upload-pic",
-  authenticateUserToken,
+  authenticateToken,
+  authorizeRoles("jobseeker"),
   uploadImage("profilePic"),
-  updateProfilePicture
+  validateProfilePicture,
+  updateProfilePicture,
 );
 
-router.patch("/:user_id/update-resume", uploadResume, updateResume);
+router.patch(
+  "/:user_id/update-resume",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  uploadResume,
+  validateResume,
+  updateResume,
+);
 
 router.delete(
   "/delete-profile-pic",
-  authenticateUserToken,
-  deleteProfilePicture
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  deleteProfilePicture,
 );
 
 export default router;

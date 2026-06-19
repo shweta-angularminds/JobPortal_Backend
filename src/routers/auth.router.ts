@@ -11,6 +11,8 @@ import {
 } from "../controllers/auth.controller";
 import uploadImage from "../middleware/uploadImage";
 import uploadResume from "../middleware/uploadResume";
+import { loginValidation } from "../validations/auth.validator";
+import { validateRequest } from "../middleware/validation.middleware";
 
 const router = Router();
 
@@ -37,6 +39,11 @@ router.post(
 );
 
 
-router.post("/jobseeker/login", jobseekerLogin);
+router.post(
+  "/jobseeker/login",
+  loginValidation,
+  validateRequest,
+  jobseekerLogin,
+);
 
 export default router;

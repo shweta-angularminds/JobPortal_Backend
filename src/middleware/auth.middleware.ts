@@ -1,64 +1,59 @@
-import dotenv from "dotenv";
-dotenv.config();
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { JwtPayload } from "jsonwebtoken";
+
 import {
   STATUS_FORBIDDEN,
   STATUS_UNAUTHORIZED,
 } from "../constants/status/http.status";
+import { verifyAccessToken } from "../utils/jwt.utils";
 
-
-interface MyJwtPayload extends JwtPayload {
-  userId: string;
-  email: string;
-  employer_name: string;
-
-  companyName: string;
-  companyLogo: string;
-  contactNumber: string;
-  address: string;
-  website: string;
-}
-
-
-function verifyAccessToken(token: string) {
-  const secret = process.env.SECRET_KEY;
-
-  if (!secret) {
-    throw new Error("SECRET_KEY is not defined in environment variables.");
-  }
-  try {
-    const decoded = jwt.verify(token, secret) as MyJwtPayload;
-    return { success: true, data: decoded };
-  } catch (error) {
-    return { success: false, error: error };
-  }
-}
-
-
-function authenticateToken(req: Request, res: Response, next: NextFunction) {
+export default function authenticateToken(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; 
+  const token = authHeader && authHeader.split(" ")[1];
 
- 
-    if (!token) {
-      return res
-        .status(STATUS_UNAUTHORIZED)
-        .send({ message: "Authentication token is missing!" });
-    }
-  
-
-  const result = verifyAccessToken(token);
-
-  if (!result.success) {
-    return res
-      .status(STATUS_FORBIDDEN)
-      .json({ message: "Unauthorized Request", error: result.error }); 
+  if (!token) {
+    return res.status(STATUS_UNAUTHORIZED).json({
+      success: false,
+      message: "Authentication token is missing",
+    });
   }
 
-  req.user = result.data; 
-  next(); 
+  try {
+    const decoded = verifyAccessToken(token);
+
+    req.user = {
+      id: decoded.sub,
+      role: decoded.role,
+    };
+
+    next();
+  } catch (error) {
+    return res.status(STATUS_FORBIDDEN).json({
+      success: false,
+      message: "Invalid or expired token",
+    });
+  }
 }
 
-export default authenticateToken; 
+export const authorizeRoles = (...roles: ("jobseeker" | "employer")[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(STATUS_UNAUTHORIZED).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(STATUS_FORBIDDEN).json({
+        success: false,
+        message: "Forbidden",
+      });
+    }
+
+    next();
+  };
+};
