@@ -14,6 +14,7 @@ import {
   deleteSkillService,
   addLanguageService,
   deleteLanguageService,
+  updateSummaryService,
 } from "../services/jobseekerDetails.service";
 
 type EducationField =
@@ -107,37 +108,22 @@ export const deleteLanguage = asyncHandler(
   },
 );
 
-export const updateSummary = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.userId;
+
+export const updateSummary = asyncHandler(
+  async (req: Request, res: Response) => {
     const { summary } = req.body;
 
-    if (!summary) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Summary is required" });
-    }
+    const updatedSummary = await updateSummaryService(req.user!.id, summary);
 
-    const jobSeekerDetails = await JobSeekerDetailsModel.findOne({
-      User_id: id,
+    return res.status(STATUS_OK).json({
+      success: true,
+      message: "Summary updated successfully",
+      data: {
+        summary: updatedSummary,
+      },
     });
-
-    if (!jobSeekerDetails) {
-      return res.status(STATUS_NOT_FOUND).json({ message: "User not found" });
-    }
-    jobSeekerDetails.summary = summary;
-
-    await jobSeekerDetails.save();
-
-    return res
-      .status(STATUS_OK)
-      .json({ message: "Summary Updated Successfully" });
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error", error: error });
-  }
-};
+  },
+);
 
 export const updatePreference = async (req: Request, res: Response) => {
   try {

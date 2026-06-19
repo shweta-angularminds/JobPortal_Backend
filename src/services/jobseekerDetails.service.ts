@@ -101,3 +101,17 @@ export const deleteLanguageService = async (
 
   return jobSeeker.languages;
 };
+
+
+export const updateSummaryService = async (
+  userId: string,
+  summary: string
+) => {
+  const jobSeeker = await findJobSeekerDetailsOrThrow(userId);
+
+  jobSeeker.summary = summary.trim();
+
+  await jobSeeker.save();
+
+  return jobSeeker.summary;
+};

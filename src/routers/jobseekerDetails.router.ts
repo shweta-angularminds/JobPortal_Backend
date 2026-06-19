@@ -20,6 +20,7 @@ import {
   addEducationValidator,
   addSkillValidator,
   languageValidator,
+  SummaryValidator,
 } from "../validations/jobseekerDetails.validator";
 import { validateRequest } from "../middleware/validation.middleware";
 
@@ -43,7 +44,6 @@ router.post(
   addEducation,
 );
 
-
 /*  SKILLS ROUTES  */
 router.post(
   "/skills",
@@ -54,17 +54,41 @@ router.post(
   addSkills,
 );
 
-router.delete("/skills",authenticateToken,
-  authorizeRoles("jobseeker"), deleteSkill);
+router.delete(
+  "/skills",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  deleteSkill,
+);
 
 /*  LANGUAGES ROUTES */
-router.post("/language", authenticateToken,authorizeRoles("jobseeker"),languageValidator, validateRequest, addLanguage);
+router.post(
+  "/language",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  languageValidator,
+  validateRequest,
+  addLanguage,
+);
 
-router.delete("/language", authenticateToken,authorizeRoles("jobseeker"), languageValidator, validateRequest, deleteLanguage);
-
+router.delete(
+  "/language",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  languageValidator,
+  validateRequest,
+  deleteLanguage,
+);
 
 //  SUMMARY ROUTES
-router.patch("/:userId/summary", updateSummary);
+router.patch(
+  "/summary",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  SummaryValidator,
+  validateRequest,
+  updateSummary,
+);
 
 //  PREFERENCE ROUTES
 router.patch("/:user_Id/preference", updatePreference);

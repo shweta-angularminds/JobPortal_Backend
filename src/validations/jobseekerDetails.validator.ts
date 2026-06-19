@@ -27,3 +27,12 @@ export const languageValidator = [
     .isLength({ min: 2, max: 30 })
     .withMessage("Language must be between 2 and 30 characters"),
 ];
+
+export const SummaryValidator = [
+  body("summary")
+    .trim()
+    .notEmpty()
+    .withMessage("Summary is required")
+    .isLength({ min: 20, max: 1000 })
+    .withMessage("Summary must be between 20 and 1000 characters"),
+];
