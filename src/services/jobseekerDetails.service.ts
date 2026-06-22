@@ -5,6 +5,8 @@ import {
   STATUS_NOT_FOUND,
 } from "../constants/status/http.status";
 import { EducationField } from "../constants/jobseeker.constants";
+import { UpdatePreferenceDto } from "../constants/interfaces/jobseeker.interface";
+import { Experience } from "../constants/interfaces/user.interface";
 
 const findJobSeekerDetailsOrThrow = async (userId: string) => {
   const details = await JobSeekerDetailsModel.findOne({
@@ -102,11 +104,7 @@ export const deleteLanguageService = async (
   return jobSeeker.languages;
 };
 
-
-export const updateSummaryService = async (
-  userId: string,
-  summary: string
-) => {
+export const updateSummaryService = async (userId: string, summary: string) => {
   const jobSeeker = await findJobSeekerDetailsOrThrow(userId);
 
   jobSeeker.summary = summary.trim();
@@ -115,3 +113,86 @@ export const updateSummaryService = async (
 
   return jobSeeker.summary;
 };
+
+export const updatePreferenceService = async (
+  userId: string,
+  data: UpdatePreferenceDto,
+) => {
+  const updated = await JobSeekerDetailsModel.findOneAndUpdate(
+    {
+      User_id: userId,
+    },
+    {
+      $set: {
+        ...(data.job_type && { "preference.job_type": data.job_type }),
+        ...(data.join_time && { "preference.join_time": data.join_time }),
+        ...(data.locations && { "preference.locations": data.locations }),
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!updated) {
+    throw new AppError("Job seeker details not found", STATUS_NOT_FOUND);
+  }
+
+  return updated.preference;
+};
+
+export const addExperienceService = async (
+  userId: string,
+  experienceData: Experience,
+) => {
+  const jobSeeker = await findJobSeekerDetailsOrThrow(userId);
+
+  jobSeeker.experience.push(experienceData);
+
+  await jobSeeker.save();
+
+  return jobSeeker.experience;
+};
+
+export const updateExperienceService = async (
+  userId: string,
+  expId: string,
+  data: Partial<Experience>,
+) => {
+  const jobSeeker = await findJobSeekerDetailsOrThrow(userId);
+
+  const experience = jobSeeker.experience.find(
+    (exp) => exp._id?.toString() === expId,
+  );
+
+  if (!experience) {
+    throw new AppError("Experience not found", STATUS_NOT_FOUND);
+  }
+
+  Object.assign(experience, data);
+
+  await jobSeeker.save();
+
+  return experience;
+};
+
+export const deleteExperienceService = async (
+  userId: string,
+  expId: string,
+) => {
+   const result = await JobSeekerDetailsModel.updateOne(
+     { User_id: userId },
+     {
+       $pull: {
+         experience: { _id: expId },
+       },
+     },
+   );
+
+   if (result.modifiedCount === 0) {
+     throw new AppError("Experience not found", STATUS_NOT_FOUND);
+   }
+
+   return true;
+}

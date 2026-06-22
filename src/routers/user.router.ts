@@ -1,5 +1,4 @@
 import { Router } from "express";
-
 import {
   deleteProfilePicture,
   getProfile,
@@ -45,7 +44,7 @@ router.patch(
 );
 
 router.patch(
-  "/:user_id/update-resume",
+  "/update-resume",
   authenticateToken,
   authorizeRoles("jobseeker"),
   uploadResume,

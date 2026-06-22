@@ -1,10 +1,4 @@
-import {
-  STATUS_BAD_REQUEST,
-  STATUS_INTERNAL_SERVER_ERROR,
-  STATUS_NOT_FOUND,
-  STATUS_OK,
-} from "../constants/status/http.status";
-import JobSeekerDetailsModel from "../models/jobseeker_details.model";
+import { STATUS_CREATED, STATUS_OK } from "../constants/status/http.status";
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
@@ -15,14 +9,13 @@ import {
   addLanguageService,
   deleteLanguageService,
   updateSummaryService,
+  updatePreferenceService,
+  addExperienceService,
+  updateExperienceService,
+  deleteExperienceService,
 } from "../services/jobseekerDetails.service";
+import { EducationField } from "../constants/jobseeker.constants";
 
-type EducationField =
-  | "X"
-  | "XII"
-  | "graduation"
-  | "postgraduation"
-  | "doctorate";
 
 export const getJobseekerDetails = asyncHandler(
   async (req: Request, res: Response) => {
@@ -108,7 +101,6 @@ export const deleteLanguage = asyncHandler(
   },
 );
 
-
 export const updateSummary = asyncHandler(
   async (req: Request, res: Response) => {
     const { summary } = req.body;
@@ -125,223 +117,56 @@ export const updateSummary = asyncHandler(
   },
 );
 
-export const updatePreference = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.user_Id;
-    const { job_type, join_time, locations } = req.body;
-
-    if (job_type && !Array.isArray(job_type)) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "job_type should be an array" });
-    }
-
-    if (
-      job_type &&
-      !job_type.every((item: string) => ["internship", "job"].includes(item))
-    ) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Invalid job type" });
-    }
-
-    if (
-      join_time &&
-      ![
-        "immediate",
-        "15 days",
-        "1 month",
-        "2 months",
-        "3 months",
-        "more than 3 months",
-      ].includes(join_time)
-    ) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Invalid join time" });
-    }
-
-    if (locations && !Array.isArray(locations)) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "locations should be an array" });
-    }
-
-    if (
-      locations &&
-      !locations.every((item: string) =>
-        [
-          "mumbai",
-          "pune",
-          "delhi",
-          "hyderabad",
-          "chennai",
-          "bangalore",
-          "chandigarh",
-          "kolkata",
-          "gurgaon",
-          "ahemdabad",
-        ].includes(item),
-      )
-    ) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Invalid location" });
-    }
-
-    const user = await JobSeekerDetailsModel.findOne({ User_id: id });
-
-    if (!user) {
-      return res.status(STATUS_BAD_REQUEST).json({ message: "User not found" });
-    }
-
-    if (!user.preference) {
-      if (!user.preference) {
-        user.preference = {
-          job_type: [],
-          join_time: "1 month",
-          locations: [],
-        };
-      }
-    }
-
-    if (job_type) {
-      user.preference.job_type = job_type;
-    }
-    if (join_time) {
-      user.preference.join_time = join_time;
-    }
-    if (locations) {
-      user.preference.locations = locations;
-    }
-
-    await user.save();
-
-    return res
-      .status(STATUS_OK)
-      .json({ message: "Preference updated successfully" });
-  } catch (error) {
-    console.error(error);
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal server error", error: error });
-  }
-};
-
-export const addExperience = async (req: Request, res: Response) => {
-  try {
-    const user = req.user;
-
-    if (!user) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Unauthorized user" });
-    }
-    const experienceData = req.body;
-
-    console.log(experienceData);
-    const jobSeeker = await JobSeekerDetailsModel.findOne({
-      User_id: user.id,
-    });
-    if (!jobSeeker) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Profile not found" });
-    }
-    jobSeeker.experience.push(experienceData);
-    await jobSeeker.save();
-    res.status(STATUS_OK).json({
-      message: "Experience added successfully",
-      data: jobSeeker.experience,
-    });
-  } catch (error) {
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error", error });
-  }
-};
-
-export const updateExperience = async (req: Request, res: Response) => {
-  try {
-    const user = req.user;
-    const { expId } = req.params;
-    const updatedData = req.body;
-
-    const jobSeeker = await JobSeekerDetailsModel.findOne({
-      User_id: user?.id,
-    });
-    if (!jobSeeker) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Profile not found" });
-    }
-    const experience = jobSeeker.experience.find(
-      (exp: any) => exp._id.toString() === expId,
+export const updatePreference = asyncHandler(
+  async (req: Request, res: Response) => {
+    const updatedPreference = await updatePreferenceService(
+      req.user!.id,
+      req.body,
     );
-    if (!experience) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Experience not found" });
-    }
 
-    Object.assign(experience, updatedData);
+    return res.status(STATUS_OK).json({
+      success: true,
+      message: "Preference updated successfully",
+      data: updatedPreference,
+    });
+  },
+);
 
-    await jobSeeker.save();
+export const addExperience = asyncHandler(
+  async (req: Request, res: Response) => {
+    const experience = await addExperienceService(req.user!.id, req.body);
 
-    res.status(STATUS_OK).json({
+    return res.status(STATUS_CREATED).json({
+      success: true,
+      message: "Experience added successfully",
+      data: experience,
+    });
+  },
+);
+
+export const updateExperience = asyncHandler(
+  async (req: Request, res: Response) => {
+    const updatedExperience = await updateExperienceService(
+      req.user!.id,
+      req.params.expId,
+      req.body,
+    );
+
+    return res.status(STATUS_OK).json({
+      success: true,
       message: "Experience updated successfully",
-      data: jobSeeker.experience,
+      data: updatedExperience,
     });
-  } catch (error) {
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error", error });
-  }
-};
+  },
+);
 
-export const deleteExperience = async (req: Request, res: Response) => {
-  try {
-    const user = req.user;
-    const { expId } = req.params;
+export const deleteExperience = asyncHandler(
+  async (req: Request, res: Response) => {
+    await deleteExperienceService(req.user!.id, req.params.expId);
 
-    if (!user) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "Unauthorized user" });
-    }
-
-    const jobSeeker = await JobSeekerDetailsModel.findOne({
-      User_id: user.id,
-    });
-
-    if (!jobSeeker) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Profile not found" });
-    }
-
-    const initialLength = jobSeeker.experience.length;
-
-    jobSeeker.experience = jobSeeker.experience.filter((exp: any) => {
-      return exp._id.toString() !== String(expId);
-    });
-
-    if (jobSeeker.experience.length === initialLength) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Experience not found" });
-    }
-
-    jobSeeker.markModified("experience");
-
-    await jobSeeker.save();
-
-    res.status(STATUS_OK).json({
+    return res.status(STATUS_OK).json({
+      success: true,
       message: "Experience deleted successfully",
     });
-  } catch (error) {
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Server error", error });
-  }
-};
+  },
+);

@@ -12,15 +12,16 @@ import {
   updatePreference,
   updateSummary,
 } from "../controllers/jobseeker.controller";
-import authenticateUserToken from "../middleware/userAuth.middleware";
 import authenticateToken, {
   authorizeRoles,
 } from "../middleware/auth.middleware";
 import {
   addEducationValidator,
   addSkillValidator,
+  experienceValidator,
   languageValidator,
   SummaryValidator,
+  updatePreferenceValidator,
 } from "../validations/jobseekerDetails.validator";
 import { validateRequest } from "../middleware/validation.middleware";
 
@@ -91,11 +92,37 @@ router.patch(
 );
 
 //  PREFERENCE ROUTES
-router.patch("/:user_Id/preference", updatePreference);
+router.patch(
+  "/preference",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  updatePreferenceValidator,
+  validateRequest,
+  updatePreference,
+);
 
 //  EXPERIENCE ROUTES
-router.post("/experience", authenticateUserToken, addExperience);
-router.put("/experience/:expId", authenticateUserToken, updateExperience);
-router.delete("/experience/:expId", authenticateUserToken, deleteExperience);
+router.post(
+  "/experience",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  experienceValidator,
+  validateRequest,
+  addExperience,
+);
+router.put(
+  "/experience/:expId",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  experienceValidator,
+  validateRequest,
+  updateExperience,
+);
+router.delete(
+  "/experience/:expId",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  deleteExperience,
+);
 
 export default router;

@@ -1,4 +1,9 @@
 import { body } from "express-validator";
+import {
+  JOB_TYPES,
+  JOIN_TIMES,
+  LOCATIONS,
+} from "../constants/jobseeker.constants";
 
 export const addEducationValidator = [
   body("educationField")
@@ -35,4 +40,48 @@ export const SummaryValidator = [
     .withMessage("Summary is required")
     .isLength({ min: 20, max: 1000 })
     .withMessage("Summary must be between 20 and 1000 characters"),
+];
+
+export const updatePreferenceValidator = [
+  body("job_type")
+    .optional()
+    .isArray()
+    .withMessage("job_type should be an array"),
+
+  body("job_type.*").optional().isIn(JOB_TYPES).withMessage("Invalid job type"),
+
+  body("join_time")
+    .optional()
+    .isIn(JOIN_TIMES)
+    .withMessage("Invalid join time"),
+
+  body("locations")
+    .optional()
+    .isArray()
+    .withMessage("locations should be an array"),
+
+  body("locations.*")
+    .optional()
+    .isIn(LOCATIONS)
+    .withMessage("Invalid location"),
+];
+
+export const experienceValidator = [
+  body("companyName").trim().notEmpty().withMessage("Company name is required"),
+
+  body("jobTitle").trim().notEmpty().withMessage("Job title is required"),
+
+  body("employmentType")
+    .isIn(["Full-time", "Part-time", "Internship", "Contract"])
+    .withMessage("Invalid employment type"),
+
+  body("startDate").isISO8601().withMessage("Invalid start date"),
+
+  body("endDate").optional().isISO8601().withMessage("Invalid end date"),
+
+  body("isCurrentJob").optional().isBoolean(),
+
+  body("technologiesUsed").optional().isArray(),
+
+  body("achievements").optional().isArray(),
 ];

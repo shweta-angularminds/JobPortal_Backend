@@ -45,6 +45,7 @@ export interface Jobseeker_details {
   experience: Experience[];
 }
 export interface Experience {
+  _id:ObjectId;
   companyName: string;
   jobTitle: string;
   location?: string;
