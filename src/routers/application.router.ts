@@ -2,18 +2,39 @@ import { Router } from "express";
 
 import {
   applyJob,
+  checkJobApplied,
   getApplicationsCount,
   getSingleJobInfo,
   seeApplications,
   updateStatus,
   viewAllAppliedJobsOfUser,
 } from "../controllers/application.controller";
+import authenticateToken, {
+  authorizeRoles,
+} from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.post("/apply", applyJob);
+// __________________ JobSeeker _____________________
 
-router.get("/viewAll/:user_Id", viewAllAppliedJobsOfUser);
+router.post("/apply", authenticateToken, authorizeRoles("jobseeker"), applyJob);
+
+
+router.get(
+  "/viewAll",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  viewAllAppliedJobsOfUser,
+);
+
+router.get(
+  "/check/:jobId",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  checkJobApplied,
+);
+
+//_________________________ Employer _____________________________
 
 router.get("/view/:id", getSingleJobInfo);
 

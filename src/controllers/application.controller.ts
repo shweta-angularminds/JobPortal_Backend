@@ -11,108 +11,50 @@ import { jobModel } from "../models/job.model";
 import { employerModel } from "../models/employer.model";
 import { ObjectId } from "mongodb";
 import UserModel from "../models/user.model";
+import { asyncHandler } from "../utils/asyncHandler";
+import {
+  applyJobService,
+  checkJobAppliedService,
+  getAllApplicationService,
+} from "../services/application.service";
 
-export const applyJob = async (req: Request, res: Response) => {
-  const { job_Id, user_Id } = req.body;
+export const applyJob = asyncHandler(async (req: Request, res: Response) => {
+  const { job_Id } = req.body;
 
-  if (!job_Id) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Job Id is required!" });
-  }
+  await applyJobService(job_Id, req.user!.id);
 
-  if (!user_Id) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "User Id is required!" });
-  }
+  return res.status(STATUS_CREATED).json({ message: "Applied Successfully!" });
+});
 
-  try {
-    const checkApply = await applicationModel.find({
-      job_Id: job_Id,
-      user_Id: user_Id,
+export const viewAllAppliedJobsOfUser = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { page = "1", limit = "10", search = "", status } = req.query;
+
+    const applications = await getAllApplicationService({
+      userId: req.user!.id,
+      page: Number(page),
+      limit: Number(limit),
+      search: search.toString(),
+      status: status?.toString(),
     });
 
-    if (checkApply.length > 0) {
-      return res.status(STATUS_OK).json({ message: "Already Applied!" });
-    }
+    res.status(STATUS_OK).json(applications);
+  },
+);
 
-    const newApplication = new applicationModel({
-      job_Id,
-      user_Id,
-      status: "pending",
+export const checkJobApplied = asyncHandler(
+  async (req: Request, res: Response) => {
+    const isApplied = await checkJobAppliedService(
+      req.user!.id,
+      req.params.jobId,
+    );
+
+    res.status(STATUS_OK).json({
+      isApplied,
     });
+  },
+);
 
-    await newApplication.save();
-
-    return res
-      .status(STATUS_CREATED)
-      .json({ message: "Applied Successfully!" });
-  } catch (error) {
-    return res.status(STATUS_INTERNAL_SERVER_ERROR).json({
-      message: "Internal server error",
-      error: error,
-    });
-  }
-};
-
-export const viewAllAppliedJobsOfUser = async (req: Request, res: Response) => {
-  const user_Id = req.params.user_Id;
-
-  if (!user_Id) {
-    return res.status(STATUS_BAD_REQUEST).json({ message: "Bad Request" });
-  }
-
-  try {
-    const applications = await applicationModel
-      .find({ user_Id })
-      .select("job_Id createdAt updatedAt status");
-
-    if (!applications || applications.length === 0) {
-      return res.status(STATUS_OK).send([]);
-    }
-
-    const jobIds = applications.map((application) => application.job_Id);
-
-    const jobs = await jobModel
-      .find({ _id: { $in: jobIds } })
-      .select("designation employer_id");
-
-    const employerIds = jobs.map((job) => job.employer_id);
-
-    const employers = await employerModel
-      .find({ _id: { $in: employerIds } })
-      .select("companyName");
-
-    const result = applications.map((application) => {
-      const job = jobs.find(
-        (job) => job._id.toString() === application.job_Id.toString()
-      );
-
-      const employer = job
-        ? employers.find(
-            (employer) => employer._id.toString() === job.employer_id.toString()
-          )
-        : null;
-
-      return {
-        application_id: application._id,
-        job_id: application.job_Id,
-        designation: job ? job.designation : null,
-        createdAt: application.createdAt,
-        status: application.status,
-        updatedAt: application.updatedAt,
-        company_name: employer ? employer.companyName : null,
-      };
-    });
-
-    return res.status(STATUS_OK).send(result);
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal Server Error", error: error });
-  }
-};
 
 export const getSingleJobInfo = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -209,11 +151,11 @@ export const getApplicationsCount = async (req: Request, res: Response) => {
 
     const totalApplicantsCount = result.reduce(
       (sum, current) => sum + current.applicantsCount,
-      0
+      0,
     );
     const totalShortlistedCount = result.reduce(
       (sum, current) => sum + current.shortlistedCount,
-      0
+      0,
     );
     return res.status(STATUS_OK).json({
       result: result,
@@ -303,7 +245,7 @@ export const seeApplications = async (req: Request, res: Response) => {
 
     const applicantsWithStatus = applicants.map((user) => {
       const userApplication = applications.find(
-        (application) => application.user_Id.toString() === user._id.toString()
+        (application) => application.user_Id.toString() === user._id.toString(),
       );
 
       return {
@@ -341,7 +283,7 @@ export const updateStatus = async (req: Request, res: Response) => {
   if (!validStatuses.includes(status)) {
     return res.status(STATUS_BAD_REQUEST).json({
       message: `Invalid status. Valid statuses are: ${validStatuses.join(
-        ", "
+        ", ",
       )}`,
     });
   }
@@ -350,7 +292,7 @@ export const updateStatus = async (req: Request, res: Response) => {
     const updateApplication = await applicationModel.findByIdAndUpdate(
       application_Id,
       { status },
-      { new: true }
+      { new: true },
     );
 
     if (!updateApplication) {
