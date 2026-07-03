@@ -66,3 +66,36 @@ export const jobSeekerRegisterValidator = [
     .withMessage("Fresher must be true or false")
     .toBoolean(),
 ];
+
+
+export const registerEmployerValidator = [
+  body("employer_name")
+    .trim()
+    .notEmpty()
+    .withMessage("Employer name is required"),
+
+  body("email").trim().isEmail().withMessage("Invalid email"),
+
+  body("companyName").trim().notEmpty().withMessage("Company name is required"),
+
+  body("contactNumber")
+    .trim()
+    .notEmpty()
+    .withMessage("Contact number is required"),
+
+  body("address").trim().notEmpty().withMessage("Address is required"),
+
+  body("website").trim().isURL().withMessage("Invalid website"),
+
+  body("password")
+    .isLength({ min: 8 })
+    .withMessage("Password must contain at least 8 characters")
+    .matches(/[A-Z]/)
+    .withMessage("Password must contain one uppercase letter")
+    .matches(/[a-z]/)
+    .withMessage("Password must contain one lowercase letter")
+    .matches(/[0-9]/)
+    .withMessage("Password must contain one number")
+    .matches(/[!@#$%^&*(),.?":{}|<>]/)
+    .withMessage("Password must contain one special character"),
+];

@@ -23,7 +23,6 @@ export default function authenticateToken(
 
   try {
     const decoded = verifyAccessToken(token);
-
     req.user = {
       id: decoded.sub,
       role: decoded.role,
@@ -31,6 +30,7 @@ export default function authenticateToken(
 
     next();
   } catch (error) {
+    console.log(error);
     return res.status(STATUS_FORBIDDEN).json({
       success: false,
       message: "Invalid or expired token",

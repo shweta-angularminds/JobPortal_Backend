@@ -14,7 +14,7 @@ const { ObjectId } = mongoose.Types;
 
 export const getJobByCompany = async (req: Request, res: Response) => {
   try {
-    const employerId = req.params.id;
+    const { employerId } = req.params;
     const { experience, department, limit } = req.query;
     const query: any = { employer_id: employerId };
 
@@ -34,7 +34,7 @@ export const getJobByCompany = async (req: Request, res: Response) => {
         .send({ message: "Invalid limit value" });
     }
 
-    const jobs = await jobModel.find(query).select("-__v").limit(limitValue);    
+    const jobs = await jobModel.find(query).select("-__v").limit(limitValue);
 
     return res.status(STATUS_OK).send(jobs);
   } catch (error) {
@@ -113,7 +113,6 @@ export const getJobs = async (req: Request, res: Response) => {
 
     let query: any = {};
 
-   
     if (search) {
       query.$or = [
         { designation: { $regex: search, $options: "i" } },
@@ -121,17 +120,14 @@ export const getJobs = async (req: Request, res: Response) => {
       ];
     }
 
-    
     if (location) {
       query.location = location;
     }
 
- 
     if (experience) {
       query.experience = experience;
     }
 
-    
     if (employementType) {
       query.employementType = employementType;
     }
@@ -151,7 +147,9 @@ export const getJobs = async (req: Request, res: Response) => {
       totalPages: Math.ceil(total / limitNumber),
     });
   } catch (error) {
-    res.status(STATUS_INTERNAL_SERVER_ERROR).json({ message: "Internal Server Error" });
+    res
+      .status(STATUS_INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal Server Error" });
   }
 };
 

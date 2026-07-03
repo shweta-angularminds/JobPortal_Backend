@@ -4,23 +4,17 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 
-import path from "path";
-
-
 import employerRouter from "./routers/employer.router";
 import jobRouter from "./routers/job.router";
-import userRouter from "./routers/user.router";
-import jobseekerRouter from "./routers/jobseekerDetails.router";
+
+import jobseekerRouter from "./routers/jobseeker.router";
 import applicationRouter from "./routers/application.router";
 import authRouter from "./routers/auth.router";
 import downloadRouter from "./routers/download.router";
 import { dbConnect } from "./configs/database.config";
 import { errorMiddleware } from "./middleware/error.middleware";
 
-
-
 dbConnect();
-
 
 const app = express();
 app.use(express.json());
@@ -38,7 +32,6 @@ app.options("*", cors(corsOptions));
 app.use("/download", downloadRouter);
 app.use("/skillset/employers", employerRouter);
 app.use("/skillset/employers/jobs", jobRouter);
-app.use("/skillset/user", userRouter);
 app.use("/skillset/jobseeker", jobseekerRouter);
 app.use("/skillset/application", applicationRouter);
 app.use("/skillset/auth", authRouter);

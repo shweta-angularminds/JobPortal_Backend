@@ -24,8 +24,61 @@ import {
   updatePreferenceValidator,
 } from "../validations/jobseekerDetails.validator";
 import { validateRequest } from "../middleware/validation.middleware";
+import {
+  deleteProfilePicture,
+  getProfile,
+  updateProfile,
+  updateProfilePicture,
+  updateResume,
+} from "../controllers/user.controller";
+import { updateProfileValidator } from "../validations/user.validator";
+import uploadImage from "../middleware/uploadImage";
+import { validateProfilePicture } from "../validations/profilePicture.validator";
+import uploadResume from "../middleware/uploadResume";
+import { validateResume } from "../validations/resume.validator";
 
 const router = Router();
+
+router.get(
+  "/profile",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  getProfile,
+);
+
+router.patch(
+  "/profile",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  updateProfileValidator,
+  validateRequest,
+  updateProfile,
+);
+
+router.patch(
+  "/profile/image",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  uploadImage("profilePic"),
+  validateProfilePicture,
+  updateProfilePicture,
+);
+
+router.delete(
+  "/profile/image",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  deleteProfilePicture,
+);
+
+router.patch(
+  "/profile/resume",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  uploadResume,
+  validateResume,
+  updateResume,
+);
 
 /* GET ALL DETAILS ROUTE */
 router.get(

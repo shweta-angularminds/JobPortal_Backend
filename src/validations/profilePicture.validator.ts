@@ -15,3 +15,16 @@ export const validateProfilePicture = (
 
   next();
 };
+export const validateCompanyLogo = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!req.file) {
+    return res.status(STATUS_BAD_REQUEST).json({
+      message: "Company logo is required",
+    });
+  }
+
+  next();
+};
