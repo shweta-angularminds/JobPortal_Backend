@@ -2,8 +2,7 @@ import { applicationModel } from "../models/application.model";
 import {
   ApplicationResponse,
   type GetAllApplicationsResponse,
-  type
-  GetAllApplicationsInput,
+  type GetAllApplicationsInput,
 } from "../constants/interfaces/application.interface";
 import { AppError } from "../utils/appError";
 import { STATUS_OK } from "../constants/status/http.status";
@@ -137,7 +136,7 @@ export const applyJobService = async (job_Id: string, user_Id: string) => {
     user_Id,
   });
   if (alreadyApplied) {
-    throw new AppError("Already Applied",STATUS_OK);
+    throw new AppError("Already Applied", STATUS_OK);
   }
   const application = await applicationModel.create({
     job_Id,

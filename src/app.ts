@@ -3,15 +3,14 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import cors from "cors";
-
+import { dbConnect } from "./configs/database.config";
 import employerRouter from "./routers/employer.router";
 import jobRouter from "./routers/job.router";
 
 import jobseekerRouter from "./routers/jobseeker.router";
 import applicationRouter from "./routers/application.router";
 import authRouter from "./routers/auth.router";
-import downloadRouter from "./routers/download.router";
-import { dbConnect } from "./configs/database.config";
+
 import { errorMiddleware } from "./middleware/error.middleware";
 
 dbConnect();
@@ -29,9 +28,8 @@ app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
 // Routes
-app.use("/download", downloadRouter);
 app.use("/skillset/employers", employerRouter);
-app.use("/skillset/employers/jobs", jobRouter);
+app.use("/skillset/jobs", jobRouter);
 app.use("/skillset/jobseeker", jobseekerRouter);
 app.use("/skillset/application", applicationRouter);
 app.use("/skillset/auth", authRouter);

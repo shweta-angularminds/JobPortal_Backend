@@ -1,5 +1,10 @@
 import { Router } from "express";
 import {
+  deleteProfilePicture,
+  getProfile,
+  updateProfile,
+  updateProfilePicture,
+  updateResume,
   addEducation,
   addExperience,
   addLanguage,
@@ -15,6 +20,8 @@ import {
 import authenticateToken, {
   authorizeRoles,
 } from "../middleware/auth.middleware";
+
+import { validateRequest } from "../middleware/validation.middleware";
 import {
   addEducationValidator,
   addSkillValidator,
@@ -22,16 +29,8 @@ import {
   languageValidator,
   SummaryValidator,
   updatePreferenceValidator,
-} from "../validations/jobseekerDetails.validator";
-import { validateRequest } from "../middleware/validation.middleware";
-import {
-  deleteProfilePicture,
-  getProfile,
-  updateProfile,
-  updateProfilePicture,
-  updateResume,
-} from "../controllers/user.controller";
-import { updateProfileValidator } from "../validations/user.validator";
+  updateProfileValidator,
+} from "../validations/jobseeker.validator";
 import uploadImage from "../middleware/uploadImage";
 import { validateProfilePicture } from "../validations/profilePicture.validator";
 import uploadResume from "../middleware/uploadResume";

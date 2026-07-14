@@ -21,7 +21,8 @@ import {
   updateEmployerValidator,
 } from "../validations/employer.validator";
 import { validateRequest } from "../middleware/validation.middleware";
-import { getJobByCompany } from "../controllers/job.controller";
+import { listJobsByEmployer } from "../controllers/job.controller";
+import { getJobsByCompanyValidator } from "../validations/job.validator";
 
 const router = Router();
 
@@ -53,6 +54,13 @@ router.put(
 
 router.get("/:id", employerIdValidator, validateRequest, getEmployerById);
 
-router.get("/:employerId/jobs", getJobByCompany);
+router.get(
+  "/:employerId/jobs",
+  authenticateToken,
+  authorizeRoles("employer"),
+  getJobsByCompanyValidator,
+  validateRequest,
+  listJobsByEmployer,
+);
 
 export default router;

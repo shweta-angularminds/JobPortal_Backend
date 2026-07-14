@@ -1,5 +1,6 @@
-import { STATUS_CREATED, STATUS_OK } from "../constants/status/http.status";
 import { Request, Response } from "express";
+
+import { STATUS_CREATED, STATUS_OK } from "../constants/status/http.status";
 
 import {
   employerLoginService,
@@ -7,8 +8,9 @@ import {
   jobSeekerRegisterService,
   registerEmployerService,
 } from "../services/auth.service";
-import { generateAccessToken } from "../utils/jwt.utils";
+
 import { asyncHandler } from "../utils/asyncHandler";
+import { generateAccessToken } from "../utils/jwt.utils";
 
 export const employerLogin = asyncHandler(
   async (req: Request, res: Response) => {

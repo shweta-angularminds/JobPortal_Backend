@@ -1,20 +1,17 @@
-import {
-  STATUS_INTERNAL_SERVER_ERROR,
-  STATUS_NOT_FOUND,
-  STATUS_OK,
-} from "../constants/status/http.status";
 import { Request, Response } from "express";
-import { employerModel } from "../models/employer.model";
+
+import { GetEmployersQuery } from "../constants/interfaces/employer.interface";
+import { STATUS_OK } from "../constants/status/http.status";
 
 import {
+  changePasswordService,
   getAllEmployersService,
+  getEmployerByIdService,
   getProfileService,
   updateProfileService,
-  changePasswordService,
-  getEmployerByIdService,
 } from "../services/employer.service";
+
 import { asyncHandler } from "../utils/asyncHandler";
-import { GetEmployersQuery } from "../constants/interfaces/employer.interface";
 
 export const getAllEmployers = asyncHandler(
   async (req: Request, res: Response) => {

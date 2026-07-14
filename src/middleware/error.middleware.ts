@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { STATUS_BAD_REQUEST, STATUS_INTERNAL_SERVER_ERROR } from "../constants/status/http.status";
+import {
+  STATUS_BAD_REQUEST,
+  STATUS_INTERNAL_SERVER_ERROR,
+} from "../constants/status/http.status";
 import { AppError } from "../utils/appError";
 import { MongoServerError } from "mongodb";
+
 export const errorMiddleware = (
   err: Error,
   req: Request,
@@ -31,4 +35,4 @@ export const errorMiddleware = (
     success: false,
     message: "Internal server error",
   });
-};;;
+};
