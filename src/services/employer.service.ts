@@ -8,7 +8,7 @@ import {
   STATUS_NOT_FOUND,
   STATUS_UNAUTHORIZED,
 } from "../constants/status/http.status";
-import { USER_FIELDS_TO_EXCLUDE } from "../constants/db.constants";
+import { USER_FIELDS_TO_EXCLUDE } from "../constants/variables/db.constants";
 import { employerModel } from "../models/employer.model";
 import { AppError } from "../utils/appError";
 

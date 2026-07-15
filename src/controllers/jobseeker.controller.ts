@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { EducationField } from "../constants/jobseeker.constants";
+import { EducationField } from "../constants/variables/jobseeker.constants";
 import { STATUS_CREATED, STATUS_OK } from "../constants/status/http.status";
 
 import {

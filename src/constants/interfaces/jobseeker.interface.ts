@@ -1,4 +1,4 @@
-import { EducationField } from "../jobseeker.constants";
+import { EducationField } from "../variables/jobseeker.constants";
 
 export interface AddEducationDto {
   educationField: EducationField;

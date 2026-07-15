@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { AppError } from "../utils/appError";
 import { jobseekerRegisterDto } from "../constants/interfaces/user.interface";
 import JobSeekerDetailsModel from "../models/jobseeker_details.model";
-import { USER_FIELDS_TO_EXCLUDE } from "../constants/db.constants";
+import { USER_FIELDS_TO_EXCLUDE } from "../constants/variables/db.constants";
 import { employerModel } from "../models/employer.model";
 import { RegisterEmployerDto } from "../constants/interfaces/employer.interface";
 

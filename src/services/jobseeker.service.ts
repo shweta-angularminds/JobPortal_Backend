@@ -4,14 +4,14 @@ import {
   STATUS_BAD_REQUEST,
   STATUS_NOT_FOUND,
 } from "../constants/status/http.status";
-import { EducationField } from "../constants/jobseeker.constants";
+import { EducationField } from "../constants/variables/jobseeker.constants";
 import { UpdatePreferenceDto } from "../constants/interfaces/jobseeker.interface";
 import {
   Experience,
   UpdateProfileDto,
 } from "../constants/interfaces/user.interface";
 import UserModel from "../models/user.model";
-import { USER_FIELDS_TO_EXCLUDE } from "../constants/db.constants";
+import { USER_FIELDS_TO_EXCLUDE } from "../constants/variables/db.constants";
 import {
   deleteImageFromCloudinary,
   deleteRawFileFromCloudinary,

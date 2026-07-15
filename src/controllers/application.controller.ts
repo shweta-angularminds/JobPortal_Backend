@@ -55,7 +55,6 @@ export const checkJobApplied = asyncHandler(
   },
 );
 
-
 export const getSingleJobInfo = async (req: Request, res: Response) => {
   const { id } = req.params;
 

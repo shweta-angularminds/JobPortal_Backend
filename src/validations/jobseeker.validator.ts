@@ -1,7 +1,11 @@
 import { body } from "express-validator";
 import { AppError } from "../utils/appError";
 import { STATUS_BAD_REQUEST } from "../constants/status/http.status";
-import { JOB_TYPES, JOIN_TIMES, LOCATIONS } from "../constants/jobseeker.constants";
+import {
+  JOB_TYPES,
+  JOIN_TIMES,
+  LOCATIONS,
+} from "../constants/variables/jobseeker.constants";
 
 export const updateProfileValidator = [
   body("email")
@@ -44,7 +48,7 @@ export const updateProfileValidator = [
   body("gender")
     .isIn(["male", "female", "other"])
     .withMessage("Invalid gender"),
-    
+
   body("fresher")
     .notEmpty()
     .withMessage("Fresher status is required")
@@ -84,8 +88,6 @@ export const updateProfileValidator = [
       return true;
     }),
 ];
-
-
 
 export const addEducationValidator = [
   body("educationField")
