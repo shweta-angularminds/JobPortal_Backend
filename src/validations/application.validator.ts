@@ -1,4 +1,4 @@
-import { body, query } from "express-validator";
+import { body, param, query } from "express-validator";
 
 export const getApplicationsValidation = [
   query("page").optional().isInt({ min: 1 }).toInt(),
@@ -18,10 +18,31 @@ export const applyJobValidation = [
     .withMessage("Job Id is required")
     .isMongoId()
     .withMessage("Invalid Job Id"),
+];
 
-  body("user_Id")
-    .notEmpty()
-    .withMessage("User Id is required")
+export const applicationIdValidator = [
+  param("id").isMongoId().withMessage("Valid application id is required"),
+];
+
+export const appliedJobIdValidation = [
+  param("jobId").isMongoId().withMessage("Invalid Job Id"),
+];
+
+export const getApplicationsCountValidator = [
+  body("jobIds").isArray({ min: 1 }).withMessage("Job IDs must be provided"),
+  body("jobIds.*")
     .isMongoId()
-    .withMessage("Invalid User Id"),
+    .withMessage("Each job ID must be a valid Mongo ID"),
+];
+
+export const updateApplicationStatusValidator = [
+  body("application_Id")
+    .isMongoId()
+    .withMessage("Valid application ID is required"),
+
+  body("status")
+    .isIn(["approved", "rejected", "pending", "shortlisted"])
+    .withMessage(
+      "Status must be one of: approved, rejected, pending, shortlisted",
+    ),
 ];

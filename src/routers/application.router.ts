@@ -1,47 +1,94 @@
 import { Router } from "express";
 
 import {
-  applyJob,
-  checkJobApplied,
+  applyForJob,
+  getApplicationDetails,
   getApplicationsCount,
-  getSingleJobInfo,
-  seeApplications,
-  updateStatus,
-  viewAllAppliedJobsOfUser,
+  getJobApplications,
+  getMyApplications,
+  hasAppliedToJob,
+  updateApplicationStatus,
 } from "../controllers/application.controller";
 import authenticateToken, {
   authorizeRoles,
 } from "../middleware/auth.middleware";
+import {
+  applicationIdValidator,
+  appliedJobIdValidation,
+  applyJobValidation,
+  getApplicationsCountValidator,
+  getApplicationsValidation,
+  updateApplicationStatusValidator,
+} from "../validations/application.validator";
+import { validateRequest } from "../middleware/validation.middleware";
 
 const router = Router();
 
 // __________________ JobSeeker _____________________
 
-router.post("/apply", authenticateToken, authorizeRoles("jobseeker"), applyJob);
-
-
-router.get(
-  "/viewAll",
+router.post(
+  "/",
   authenticateToken,
   authorizeRoles("jobseeker"),
-  viewAllAppliedJobsOfUser,
+  applyJobValidation,
+  validateRequest,
+  applyForJob,
 );
 
 router.get(
-  "/check/:jobId",
+  "/my",
   authenticateToken,
   authorizeRoles("jobseeker"),
-  checkJobApplied,
+  getApplicationsValidation,
+  validateRequest,
+  getMyApplications,
 );
 
-//_________________________ Employer _____________________________
+router.get(
+  "/job/:jobId/check",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  appliedJobIdValidation,
+  validateRequest,
+  hasAppliedToJob,
+);
 
-router.get("/view/:id", getSingleJobInfo);
+//_______________________Employer _________________________
 
-router.post("/getApplicationsCount", getApplicationsCount);
+router.get(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("employer"),
+  applicationIdValidator,
+  validateRequest,
+  getApplicationDetails,
+);
 
-router.get("/see-applications/:id", seeApplications);
+router.post(
+  "/count",
+  authenticateToken,
+  authorizeRoles("employer"),
+  getApplicationsCountValidator,
+  validateRequest,
+  getApplicationsCount,
+);
 
-router.put("/update-status", updateStatus);
+router.get(
+  "/see-applications/:id",
+  authenticateToken,
+  authorizeRoles("employer"),
+  getApplicationsValidation,
+  validateRequest,
+  getJobApplications,
+);
+
+router.put(
+  "/:applicationId/status",
+  authenticateToken,
+  authorizeRoles("employer"),
+  updateApplicationStatusValidator,
+  validateRequest,
+  updateApplicationStatus,
+);
 
 export default router;

@@ -1,12 +1,18 @@
 import { applicationModel } from "../models/application.model";
+import { ObjectId } from "mongodb";
 import {
   ApplicationResponse,
   type GetAllApplicationsResponse,
   type GetAllApplicationsInput,
 } from "../constants/interfaces/application.interface";
 import { AppError } from "../utils/appError";
-import { STATUS_OK } from "../constants/status/http.status";
+import { STATUS_NOT_FOUND, STATUS_OK } from "../constants/status/http.status";
 import mongoose from "mongoose";
+import { employerModel } from "../models/employer.model";
+import { jobModel } from "../models/job.model";
+import UserModel from "../models/user.model";
+
+// ___________________ JOBSEEKER ____________________
 
 export const getAllApplicationService = async ({
   userId,
@@ -154,4 +160,200 @@ export const checkJobAppliedService = async (userId: string, jobId: string) => {
   });
 
   return !!exists;
+};
+
+// ________________________ EMPLOYER ____________________
+
+export const getApplicationDetailsService = async (id: string) => {
+  const application = await applicationModel
+    .findById(id)
+    .select("job_Id createdAt updatedAt");
+
+  if (!application) {
+    throw new AppError("Application not found", STATUS_NOT_FOUND);
+  }
+
+  const job = await jobModel
+    .findById(application.job_Id)
+    .select("designation employer_id");
+
+  if (!job) {
+    throw new AppError("Job not found", STATUS_NOT_FOUND);
+  }
+
+  const employer = await employerModel
+    .findById(job.employer_id)
+    .select("companyName");
+
+  if (!employer) {
+    throw new AppError("Employer not found", STATUS_NOT_FOUND);
+  }
+
+  return {
+    application_id: application._id,
+    designation: job.designation,
+    job_id: application.job_Id,
+    createdAt: application.createdAt,
+    updatedAt: application.updatedAt,
+    company_name: employer.companyName,
+  };
+};
+
+export const getApplicationsCountService = async (jobIds: string[]) => {
+  const objectIds = jobIds.map((id) => new ObjectId(id));
+
+  const result = await applicationModel.aggregate([
+    {
+      $match: {
+        job_Id: { $in: objectIds },
+      },
+    },
+    {
+      $group: {
+        _id: "$job_Id",
+        applicantsCount: { $sum: 1 },
+        shortlistedCount: {
+          $sum: {
+            $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0],
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        job_Id: "$_id",
+        applicantsCount: 1,
+        shortlistedCount: 1,
+      },
+    },
+  ]);
+
+  const total = result.reduce(
+    (sum, current) => sum + current.applicantsCount,
+    0,
+  );
+
+  const shortlisted = result.reduce(
+    (sum, current) => sum + current.shortlistedCount,
+    0,
+  );
+
+  return {
+    result,
+    total,
+    shortlisted,
+  };
+};
+
+export const getJobApplicationsService = async ({
+  jobId,
+  page,
+  limit,
+  status,
+}: {
+  jobId: string;
+  page: number;
+  limit: number;
+  status?: string;
+}) => {
+  const job = await jobModel.findById(jobId).select("designation");
+
+  if (!job) {
+    throw new AppError("Job not found", STATUS_NOT_FOUND);
+  }
+
+  const skip = (page - 1) * limit;
+  const statusFilter = status ? { status } : {};
+
+  const applications = await applicationModel
+    .find({
+      job_Id: jobId,
+      ...statusFilter,
+    })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  if (!applications.length) {
+    return {
+      job,
+      totalApplicants: 0,
+      page,
+      limit,
+      applicants: [],
+    };
+  }
+
+  const totalApplicants = await applicationModel.aggregate([
+    {
+      $match: {
+        job_Id: new ObjectId(jobId),
+      },
+    },
+    {
+      $facet: {
+        statusCounts: [
+          {
+            $group: {
+              _id: "$status",
+              count: { $sum: 1 },
+            },
+          },
+        ],
+        totalCount: [
+          {
+            $count: "totalApplications",
+          },
+        ],
+      },
+    },
+  ]);
+
+  const userIds = applications
+    .filter((application) => application.user_Id)
+    .map((application) => application.user_Id);
+
+  const users = await UserModel.find({
+    _id: { $in: userIds },
+  })
+    .select("resume username email createdAt")
+    .lean();
+
+  const applicants = users.map((user) => {
+    const application = applications.find(
+      (app) => app.user_Id.toString() === user._id.toString(),
+    );
+
+    return {
+      ...user,
+      applicationId: application?._id ?? null,
+      status: application?.status ?? null,
+    };
+  });
+
+  return {
+    job,
+    totalApplicants,
+    page,
+    limit,
+    applicants,
+  };
+};
+
+export const updateApplicationStatusService = async (
+  applicationId: string,
+  status: string,
+) => {
+  const application = await applicationModel.findByIdAndUpdate(
+    applicationId,
+    { status },
+    { new: true },
+  );
+
+  if (!application) {
+    throw new AppError("Application not found", STATUS_NOT_FOUND);
+  }
+
+  return application;
 };

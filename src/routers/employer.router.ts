@@ -56,8 +56,7 @@ router.get("/:id", employerIdValidator, validateRequest, getEmployerById);
 
 router.get(
   "/:employerId/jobs",
-  authenticateToken,
-  authorizeRoles("employer"),
+  
   getJobsByCompanyValidator,
   validateRequest,
   listJobsByEmployer,
