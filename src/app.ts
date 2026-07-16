@@ -12,6 +12,9 @@ import authRouter from "./routers/auth.router";
 
 import { errorMiddleware } from "./middleware/error.middleware";
 
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./docs/swagger";
+
 const app = express();
 
 const limiter = rateLimit({
@@ -36,12 +39,13 @@ app.use(compression());
 
 app.use(express.json({ limit: "10mb" }));
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Routes
+app.use("/skillset/auth", authRouter);
 app.use("/skillset/employers", employerRouter);
 app.use("/skillset/jobs", jobRouter);
 app.use("/skillset/jobseeker", jobseekerRouter);
 app.use("/skillset/application", applicationRouter);
-app.use("/skillset/auth", authRouter);
 
 // 404 handler
 app.use((req, res) => {

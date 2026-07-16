@@ -99,7 +99,7 @@ export const addEducationValidator = [
   body("educationData").notEmpty().withMessage("Education data is required"),
 ];
 
-export const addSkillValidator = [
+export const skillValidator = [
   body("skill")
     .trim()
     .notEmpty()
