@@ -36,7 +36,7 @@ export const getApplicationsCountValidator = [
 ];
 
 export const updateApplicationStatusValidator = [
-  body("application_Id")
+  param("applicationId")
     .isMongoId()
     .withMessage("Valid application ID is required"),
 

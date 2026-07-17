@@ -101,10 +101,11 @@ export const getJobApplications = asyncHandler(
 );
 
 export const updateApplicationStatus = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { application_Id, status } = matchedData(req);
+  async  (req: Request, res: Response) => {
+    const { applicationId} = req.params;
+    const {status} = req.body;
 
-    await updateApplicationStatusService(application_Id, status);
+    await updateApplicationStatusService(applicationId, status);
 
     return res.status(STATUS_OK).json({
       message: "Status updated successfully!",
