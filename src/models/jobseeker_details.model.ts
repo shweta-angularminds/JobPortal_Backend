@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { Jobseeker_details } from "../constants/interfaces/user.interface";
+import { Jobseeker_details } from "../constants/interfaces/jobseeker.interface";
 import { InternshipSchema } from "./schemas/internship.schema";
 import { ExperienceSchema } from "./schemas/experience.schema";
 import { PreferenceSchema } from "./schemas/preference.schema";

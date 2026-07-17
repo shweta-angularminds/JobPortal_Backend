@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { Experience } from "../../constants/interfaces/user.interface";
+import { Experience } from "../../constants/interfaces/jobseeker.interface";
 
 export const ExperienceSchema = new Schema<Experience>(
   {

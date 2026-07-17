@@ -10,7 +10,7 @@ import { STATUS_NOT_FOUND, STATUS_OK } from "../constants/status/http.status";
 import mongoose from "mongoose";
 import { employerModel } from "../models/employer.model";
 import { jobModel } from "../models/job.model";
-import UserModel from "../models/user.model";
+import UserModel from "../models/jobseeker.model";
 
 // ___________________ JOBSEEKER ____________________
 

@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import { Preference } from "../../constants/interfaces/user.interface";
+import { Preference } from "../../constants/interfaces/jobseeker.interface";
 
 export const PreferenceSchema = new Schema<Preference>(
   {

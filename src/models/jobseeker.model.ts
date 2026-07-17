@@ -1,7 +1,8 @@
-import mongoose, { Document, Schema } from "mongoose";
-import { User } from "../constants/interfaces/user.interface";
+import mongoose, { Schema } from "mongoose";
+import { Jobseeker } from "../constants/interfaces/jobseeker.interface";
 
-const userSchema: Schema = new Schema<User>(
+
+const jobseekerSchema: Schema = new Schema<Jobseeker>(
   {
     username: {
       type: String,
@@ -49,9 +50,9 @@ const userSchema: Schema = new Schema<User>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const UserModel = mongoose.model<User>("User", userSchema);
+const JobseekerModel = mongoose.model<Jobseeker>("jobseekers", jobseekerSchema);
 
-export default UserModel;
+export default JobseekerModel;

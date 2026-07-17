@@ -1,8 +1,8 @@
 import { STATUS_BAD_REQUEST } from "../constants/status/http.status";
-import UserModel from "../models/user.model";
+import UserModel from "../models/jobseeker.model";
 import bcrypt from "bcryptjs";
 import { AppError } from "../utils/appError";
-import { jobseekerRegisterDto } from "../constants/interfaces/user.interface";
+import { jobseekerRegisterDto } from "../constants/interfaces/jobseeker.interface";
 import JobSeekerDetailsModel from "../models/jobseeker_details.model";
 import { USER_FIELDS_TO_EXCLUDE } from "../constants/variables/db.constants";
 import { employerModel } from "../models/employer.model";

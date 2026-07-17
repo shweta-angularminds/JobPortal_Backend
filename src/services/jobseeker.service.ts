@@ -5,12 +5,9 @@ import {
   STATUS_NOT_FOUND,
 } from "../constants/status/http.status";
 import { EducationField } from "../constants/variables/jobseeker.constants";
-import { UpdatePreferenceDto } from "../constants/interfaces/jobseeker.interface";
-import {
-  Experience,
-  UpdateProfileDto,
-} from "../constants/interfaces/user.interface";
-import UserModel from "../models/user.model";
+import { Experience, UpdatePreferenceDto, UpdateProfileDto } from "../constants/interfaces/jobseeker.interface";
+
+import UserModel from "../models/jobseeker.model";
 import { USER_FIELDS_TO_EXCLUDE } from "../constants/variables/db.constants";
 import {
   deleteImageFromCloudinary,
@@ -190,7 +187,7 @@ export const deleteLanguageService = async (
     throw new AppError("Language not found", STATUS_NOT_FOUND);
   }
 
-  jobSeeker.languages = jobSeeker.languages.filter((lang) => lang !== language);
+  jobSeeker.languages = jobSeeker.languages.filter((lang:any) => lang !== language);
 
   await jobSeeker.save();
 
@@ -256,7 +253,7 @@ export const updateExperienceService = async (
   const jobSeeker = await findJobSeekerDetailsOrThrow(userId);
 
   const experience = jobSeeker.experience.find(
-    (exp) => exp._id?.toString() === expId,
+    (exp:any) => exp._id?.toString() === expId,
   );
 
   if (!experience) {

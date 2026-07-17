@@ -10,7 +10,7 @@ import { Request, Response } from "express";
 import { jobModel } from "../models/job.model";
 import { employerModel } from "../models/employer.model";
 import { ObjectId } from "mongodb";
-import UserModel from "../models/user.model";
+import UserModel from "../models/jobseeker.model";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
   applyJobService,
@@ -101,9 +101,9 @@ export const getJobApplications = asyncHandler(
 );
 
 export const updateApplicationStatus = asyncHandler(
-  async  (req: Request, res: Response) => {
-    const { applicationId} = req.params;
-    const {status} = req.body;
+  async (req: Request, res: Response) => {
+    const { applicationId } = req.params;
+    const { status } = req.body;
 
     await updateApplicationStatusService(applicationId, status);
 
