@@ -1,4 +1,5 @@
 import { ObjectId } from "mongoose";
+
 export interface JobDescription {
   keyResponsibilities?: string[];
   descriptionInfo?: string[];

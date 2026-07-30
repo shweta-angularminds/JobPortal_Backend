@@ -30,7 +30,6 @@ export default function authenticateToken(
 
     next();
   } catch (error) {
-    console.log(error);
     return res.status(STATUS_FORBIDDEN).json({
       success: false,
       message: "Invalid or expired token",
