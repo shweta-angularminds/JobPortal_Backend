@@ -3,7 +3,7 @@ import { Router } from "express";
 import {
   applyForJob,
   getApplicationDetails,
-  getApplicationsCount,
+  
   getJobApplications,
   getMyApplications,
   hasAppliedToJob,
@@ -16,7 +16,6 @@ import {
   applicationIdValidator,
   appliedJobIdValidation,
   applyJobValidation,
-  getApplicationsCountValidator,
   getApplicationsValidation,
   updateApplicationStatusValidator,
 } from "../validations/application.validator";
@@ -223,53 +222,6 @@ router.get(
   getApplicationDetails,
 );
 
-/**
- * @openapi
- * /skillset/application/count:
- *   post:
- *     tags:
- *       - Application
- *     summary: Employer - Get application counts for jobs
- *     description: Returns the number of applications for each specified job. Accessible only by the authenticated employer.
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - jobIds
- *             properties:
- *               jobIds:
- *                 type: array
- *                 description: List of job MongoDB IDs.
- *                 items:
- *                   type: string
- *                 example:
- *                   - 64f1b2c3d4e5f67890123456
- *                   - 64f1b2c3d4e5f67890123457
- *     responses:
- *       200:
- *         description: Application counts retrieved successfully.
- *       400:
- *         description: Invalid request body or one or more job IDs are invalid.
- *       401:
- *         description: Unauthorized. Invalid or missing access token.
- *       403:
- *         description: Forbidden. Only employers can access this endpoint.
- *       500:
- *         description: Internal server error.
- */
-router.post(
-  "/count",
-  authenticateToken,
-  authorizeRoles("employer"),
-  getApplicationsCountValidator,
-  validateRequest,
-  getApplicationsCount,
-);
 
 /**
  * @openapi

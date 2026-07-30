@@ -199,52 +199,7 @@ export const getApplicationDetailsService = async (id: string) => {
   };
 };
 
-export const getApplicationsCountService = async (jobIds: string[]) => {
-  const objectIds = jobIds.map((id) => new ObjectId(id));
 
-  const result = await applicationModel.aggregate([
-    {
-      $match: {
-        job_Id: { $in: objectIds },
-      },
-    },
-    {
-      $group: {
-        _id: "$job_Id",
-        applicantsCount: { $sum: 1 },
-        shortlistedCount: {
-          $sum: {
-            $cond: [{ $eq: ["$status", "shortlisted"] }, 1, 0],
-          },
-        },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        job_Id: "$_id",
-        applicantsCount: 1,
-        shortlistedCount: 1,
-      },
-    },
-  ]);
-
-  const total = result.reduce(
-    (sum, current) => sum + current.applicantsCount,
-    0,
-  );
-
-  const shortlisted = result.reduce(
-    (sum, current) => sum + current.shortlistedCount,
-    0,
-  );
-
-  return {
-    result,
-    total,
-    shortlisted,
-  };
-};
 
 export const getJobApplicationsService = async ({
   jobId,

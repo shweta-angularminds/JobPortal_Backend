@@ -28,12 +28,7 @@ export const appliedJobIdValidation = [
   param("jobId").isMongoId().withMessage("Invalid Job Id"),
 ];
 
-export const getApplicationsCountValidator = [
-  body("jobIds").isArray({ min: 1 }).withMessage("Job IDs must be provided"),
-  body("jobIds.*")
-    .isMongoId()
-    .withMessage("Each job ID must be a valid Mongo ID"),
-];
+
 
 export const updateApplicationStatusValidator = [
   param("applicationId")

@@ -83,9 +83,9 @@ export const listJobsByEmployer = asyncHandler(
 
 export const listEmployerJobs = asyncHandler(
   async (req: Request, res: Response) => {
-    const jobs = await listEmployerJobsService(req.user?.id!);
+    const { jobs, summary } = await listEmployerJobsService(req.user?.id!);
 
-    return res.status(STATUS_OK).json(jobs);
+    return res.status(STATUS_OK).json({ data: { jobs, summary } });
   },
 );
 
@@ -144,6 +144,6 @@ export const getCandidateDetails = asyncHandler(
       candidateId,
     });
 
-    return res.status(STATUS_OK).json(candidate);
+    return res.status(STATUS_OK).json({ data: candidate });
   },
 );

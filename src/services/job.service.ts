@@ -97,7 +97,59 @@ export const listJobsService = async ({
 // _______________________ EMPLOYER JOB SERVICES __________________
 
 export const listEmployerJobsService = async (employerId: string) => {
-  return jobModel.find({ employer_id: employerId });
+  const jobs = await jobModel.aggregate([
+    {
+      $match: {
+        employer_id: new mongoose.Types.ObjectId(employerId),
+      },
+    },
+    {
+      $lookup: {
+        from: "applications", // collection name
+        localField: "_id",
+        foreignField: "job_Id",
+        as: "applications",
+      },
+    },
+    {
+      $addFields: {
+        applicantsCount: { $size: "$applications" },
+        shortlistedCount: {
+          $size: {
+            $filter: {
+              input: "$applications",
+              as: "application",
+              cond: {
+                $eq: ["$$application.status", "shortlisted"],
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        applications: 0, // remove full application array
+      },
+    },
+  ]);
+  const summary = jobs.reduce(
+    (acc, job) => {
+      acc.totalApplicants += job.applicantsCount;
+      acc.totalShortlisted += job.shortlistedCount;
+      return acc;
+    },
+    {
+      totalJobs: jobs.length,
+      totalApplicants: 0,
+      totalShortlisted: 0,
+    },
+  );
+
+  return {
+    jobs,
+    summary,
+  };
 };
 
 export const createJobService = async (jobData: CreateJobParams) => {
@@ -142,7 +194,7 @@ export const getCandidateDetailsService = async ({
     },
     {
       $lookup: {
-        from: "users",
+        from: "jobseekers",
         localField: "User_id",
         foreignField: "_id",
         as: "user_info",

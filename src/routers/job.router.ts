@@ -113,6 +113,8 @@ router.get("/", getJobsValidator, validateRequest, listJobs);
  */
 router.get("/:id", jobIdValidation, validateRequest, getJobById);
 
+
+
 // BELOW ROUTES ARE FOR EMPLOYERS TO PERFORM CRUD ON JOBS
 
 /**
@@ -136,7 +138,7 @@ router.get("/:id", jobIdValidation, validateRequest, getJobById);
  *         description: Internal server error.
  */
 router.get(
-  "/jobs/employer",
+  "/employer",
   authenticateToken,
   authorizeRoles("employer"),
   listEmployerJobs,

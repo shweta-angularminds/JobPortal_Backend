@@ -1,6 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Router } from "express";
 import authenticateToken, {
   authorizeRoles,
@@ -21,8 +18,7 @@ import {
   updateEmployerValidator,
 } from "../validations/employer.validator";
 import { validateRequest } from "../middleware/validation.middleware";
-import { listJobsByEmployer } from "../controllers/job.controller";
-import { getJobsByCompanyValidator } from "../validations/job.validator";
+import { listEmployerJobs } from "../controllers/job.controller";
 
 const router = Router();
 
@@ -68,6 +64,13 @@ const router = Router();
  */
 router.get("/", getEmployersValidation, validateRequest, getAllEmployers);
 
+
+router.get(
+  "/:id/jobs",
+  listEmployerJobs,
+);
+
+// _______________ Authenticated Employer Routes _________________
 /**
  * @openapi
  * /skillset/employers/profile:
@@ -221,34 +224,6 @@ router.put(
 
 /**
  * @openapi
- * /skillset/employers/{id}:
- *   get:
- *     tags:
- *       - Employer
- *     summary: Get employer by ID
- *     description: Retrieves the details of an employer by its MongoDB ID.
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: Employer MongoDB ID
- *         schema:
- *           type: string
- *           example: 64f1b2c3d4e5f67890123456
- *     responses:
- *       200:
- *         description: Employer retrieved successfully.
- *       400:
- *         description: Invalid employer ID.
- *       404:
- *         description: Employer not found.
- *       500:
- *         description: Internal server error.
- */
-router.get("/:id", employerIdValidator, validateRequest, getEmployerById);
-
-/**
- * @openapi
  * /skillset/employers/{employerId}/jobs:
  *   get:
  *     tags:
@@ -296,10 +271,38 @@ router.get("/:id", employerIdValidator, validateRequest, getEmployerById);
  *         description: Internal server error.
  */
 router.get(
-  "/:employerId/jobs",
-  getJobsByCompanyValidator,
-  validateRequest,
-  listJobsByEmployer,
+  "/jobs",
+  authenticateToken,
+  authorizeRoles("employer"),
+  listEmployerJobs,
 );
+
+/**
+ * @openapi
+ * /skillset/employers/{id}:
+ *   get:
+ *     tags:
+ *       - Employer
+ *     summary: Get employer by ID
+ *     description: Retrieves the details of an employer by its MongoDB ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Employer MongoDB ID
+ *         schema:
+ *           type: string
+ *           example: 64f1b2c3d4e5f67890123456
+ *     responses:
+ *       200:
+ *         description: Employer retrieved successfully.
+ *       400:
+ *         description: Invalid employer ID.
+ *       404:
+ *         description: Employer not found.
+ *       500:
+ *         description: Internal server error.
+ */
+router.get("/:id", employerIdValidator, validateRequest, getEmployerById);
 
 export default router;

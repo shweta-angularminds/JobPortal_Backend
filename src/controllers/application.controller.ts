@@ -1,27 +1,14 @@
-import {
-  STATUS_BAD_REQUEST,
-  STATUS_CREATED,
-  STATUS_INTERNAL_SERVER_ERROR,
-  STATUS_NOT_FOUND,
-  STATUS_OK,
-} from "../constants/status/http.status";
-import { applicationModel } from "../models/application.model";
+import { STATUS_CREATED, STATUS_OK } from "../constants/status/http.status";
 import { Request, Response } from "express";
-import { jobModel } from "../models/job.model";
-import { employerModel } from "../models/employer.model";
-import { ObjectId } from "mongodb";
-import UserModel from "../models/jobseeker.model";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
   applyJobService,
   checkJobAppliedService,
   getAllApplicationService,
   getApplicationDetailsService,
-  getApplicationsCountService,
   getJobApplicationsService,
   updateApplicationStatusService,
 } from "../services/application.service";
-import { matchedData } from "express-validator";
 
 // ________________________FOR JOBSEEKER __________________________________
 
@@ -71,24 +58,19 @@ export const getApplicationDetails = async (req: Request, res: Response) => {
   res.status(STATUS_OK).json(application);
 };
 
-export const getApplicationsCount = async (req: Request, res: Response) => {
-  const { jobIds } = matchedData(req);
-
-  const result = await getApplicationsCountService(jobIds);
-
-  return res.status(STATUS_OK).json(result);
-};
-
 export const getJobApplications = asyncHandler(
   async (req: Request, res: Response) => {
     const {
       page = 1,
       limit = 10,
       status,
-    } = matchedData(req, {
-      locations: ["query"],
-    });
+    } = req.query as {
+      page?: string;
+      limit?: string;
+      status?: string;
+    };
     const { id } = req.params;
+
     const result = await getJobApplicationsService({
       jobId: id,
       page: Number(page),

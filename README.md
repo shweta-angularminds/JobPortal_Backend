@@ -125,6 +125,13 @@ http://localhost:5000
 ```
 
 ---
+## Swagger API Docs URL
+
+```
+http://localhost:5000/api-docs
+```
+
+---
 
 ## Main Routes
 
