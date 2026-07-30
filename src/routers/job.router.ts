@@ -1,36 +1,76 @@
 import { Router } from "express";
-import authenticateToken from "../middleware/auth.middleware";
+import authenticateToken, {
+  authorizeRoles,
+} from "../middleware/auth.middleware";
 import {
-  applicantsDetails,
-  createNewJob,
+  createJob,
   deleteJob,
-  getAllJobs,
-  getJobByCompany,
-  getJobDetails,
-  getJobs,
-  updateJobDetails,
+  getCandidateDetails,
+  getJobById,
+  listEmployerJobs,
+  listJobs,
+  listJobsByEmployer,
+  updateJob,
 } from "../controllers/job.controller";
+import {
+  candidateDetailsValidation,
+  createJobValidator,
+  getJobsValidator,
+  jobIdValidation,
+  updateJobValidator,
+} from "../validations/job.validator";
+import { validateRequest } from "../middleware/validation.middleware";
+
+// API documentation for these routes lives in `src/docs/job.docs.ts`
+// and reuses schemas from `src/docs/schemas/job.schema.ts`.
 
 const router = Router();
 
-router.get("/find", getJobs);
+router.get("/", getJobsValidator, validateRequest, listJobs);
 
-router.get("/company/:id", getJobByCompany);
+router.get("/:id", jobIdValidation, validateRequest, getJobById);
 
-router.get("/:id", getJobDetails);
-
-
+router.get(
+  "/employer/:employerId",
+  listJobsByEmployer,
+);
 
 // BELOW ROUTES ARE FOR EMPLOYERS TO PERFORM CRUD ON JOBS
 
-router.get("/view/all", authenticateToken, getAllJobs);
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("employer"),
+  createJobValidator,
+  validateRequest,
+  createJob,
+);
 
-router.post("/add", authenticateToken, createNewJob);
+router.put(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("employer"),
+  updateJobValidator,
+  validateRequest,
+  updateJob,
+);
 
-router.put("/update/:id", authenticateToken, updateJobDetails);
+router.delete(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("employer"),
+  jobIdValidation,
+  validateRequest,
+  deleteJob,
+);
 
-router.delete("/delete/:id", authenticateToken, deleteJob);
-
-router.get("/candidate/:id", applicantsDetails);
+router.get(
+  "/:jobId/candidates/:candidateId",
+  authenticateToken,
+  authorizeRoles("employer"),
+  candidateDetailsValidation,
+  validateRequest,
+  getCandidateDetails,
+);
 
 export default router;

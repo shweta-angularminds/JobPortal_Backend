@@ -1,28 +1,26 @@
-import dotenv from "dotenv";
-
-dotenv.config();
 import express from "express";
 import cors from "cors";
-
-import path from "path";
-
+import helmet from "helmet";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
 
 import employerRouter from "./routers/employer.router";
 import jobRouter from "./routers/job.router";
-import userRouter from "./routers/user.router";
-import jobseekerRouter from "./routers/jobseekerDetails.router";
+import jobseekerRouter from "./routers/jobseeker.router";
 import applicationRouter from "./routers/application.router";
 import authRouter from "./routers/auth.router";
-import downloadRouter from "./routers/download.router";
-import { dbConnect } from "./configs/database.config";
 
+import { errorMiddleware } from "./middleware/error.middleware";
 
-
-dbConnect();
-
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./docs/swagger";
 
 const app = express();
-app.use(express.json());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
 
 const corsOptions = {
   origin: ["http://localhost:4200", "https://skillsetworks.netlify.app"],
@@ -30,16 +28,34 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
+app.use(helmet());
+
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
+app.use(limiter);
+
+app.use(compression());
+
+app.use(express.json({ limit: "10mb" }));
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Routes
-app.use("/download", downloadRouter);
+app.use("/skillset/auth", authRouter);
 app.use("/skillset/employers", employerRouter);
-app.use("/skillset/employers/jobs", jobRouter);
-app.use("/skillset/user", userRouter);
+app.use("/skillset/jobs", jobRouter);
 app.use("/skillset/jobseeker", jobseekerRouter);
 app.use("/skillset/application", applicationRouter);
-app.use("/skillset/auth", authRouter);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
+// Global error handler
+app.use(errorMiddleware);
 
 export default app;

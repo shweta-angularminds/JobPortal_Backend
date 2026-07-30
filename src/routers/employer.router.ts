@@ -1,8 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Router } from "express";
-import authenticateToken from "../middleware/auth.middleware";
+import authenticateToken, {
+  authorizeRoles,
+} from "../middleware/auth.middleware";
 
 import {
   changePassword,
@@ -12,22 +11,61 @@ import {
   updateEmployerDetails,
 } from "../controllers/employer.controller";
 import uploadImage from "../middleware/uploadImage";
+import {
+  changePasswordValidator,
+  employerIdValidator,
+  getEmployersValidation,
+  updateEmployerValidator,
+} from "../validations/employer.validator";
+import { validateRequest } from "../middleware/validation.middleware";
+import { listEmployerJobs } from "../controllers/job.controller";
+
+// API documentation for these routes lives in `src/docs/employer.docs.ts`
+// and reuses schemas from `src/docs/schemas/employer.schema.ts`.
 
 const router = Router();
 
-router.get("/profile", authenticateToken, employerProfile);
+router.get("/", getEmployersValidation, validateRequest, getAllEmployers);
 
-router.put(
-  "/profile/update",
+// Public: jobs for a specific employer by ID
+router.get("/:id/jobs", listEmployerJobs);
+
+// _______________ Authenticated Employer Routes _________________
+
+router.get(
+  "/profile",
   authenticateToken,
-  uploadImage("companyLogo"),
-  updateEmployerDetails
+  authorizeRoles("employer"),
+  employerProfile,
 );
 
-router.put("/change-password", authenticateToken, changePassword);
+router.put(
+  "/profile",
+  authenticateToken,
+  authorizeRoles("employer"),
+  uploadImage("companyLogo"),
+  updateEmployerValidator,
+  validateRequest,
+  updateEmployerDetails,
+);
 
-router.get("/", getAllEmployers);
+router.put(
+  "/change-password",
+  authenticateToken,
+  authorizeRoles("employer"),
+  changePasswordValidator,
+  validateRequest,
+  changePassword,
+);
 
-router.get("/:id", getEmployerById);
+// Authenticated: jobs for the currently logged-in employer
+router.get(
+  "/jobs",
+  authenticateToken,
+  authorizeRoles("employer"),
+  listEmployerJobs,
+);
+
+router.get("/:id", employerIdValidator, validateRequest, getEmployerById);
 
 export default router;

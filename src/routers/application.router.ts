@@ -1,26 +1,86 @@
 import { Router } from "express";
 
 import {
-  applyJob,
-  getApplicationsCount,
-  getSingleJobInfo,
-  seeApplications,
-  updateStatus,
-  viewAllAppliedJobsOfUser,
+  applyForJob,
+  getApplicationDetails,
+  getJobApplications,
+  getMyApplications,
+  hasAppliedToJob,
+  updateApplicationStatus,
 } from "../controllers/application.controller";
+import authenticateToken, {
+  authorizeRoles,
+} from "../middleware/auth.middleware";
+import {
+  applicationIdValidator,
+  appliedJobIdValidation,
+  applyJobValidation,
+  getApplicationsValidation,
+  updateApplicationStatusValidator,
+} from "../validations/application.validator";
+import { validateRequest } from "../middleware/validation.middleware";
+
+// API documentation for these routes lives in `src/docs/application.docs.ts`
+// and reuses schemas from `src/docs/schemas/application.schema.ts`.
 
 const router = Router();
 
-router.post("/apply", applyJob);
+// __________________ JobSeeker _____________________
 
-router.get("/viewAll/:user_Id", viewAllAppliedJobsOfUser);
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  applyJobValidation,
+  validateRequest,
+  applyForJob,
+);
 
-router.get("/view/:id", getSingleJobInfo);
+router.get(
+  "/my",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  getApplicationsValidation,
+  validateRequest,
+  getMyApplications,
+);
 
-router.post("/getApplicationsCount", getApplicationsCount);
+router.get(
+  "/job/:jobId/check",
+  authenticateToken,
+  authorizeRoles("jobseeker"),
+  appliedJobIdValidation,
+  validateRequest,
+  hasAppliedToJob,
+);
 
-router.get("/see-applications/:id", seeApplications);
+//_______________________Employer _________________________
 
-router.put("/update-status", updateStatus);
+router.get(
+  "/:id",
+  authenticateToken,
+  authorizeRoles("employer"),
+  applicationIdValidator,
+  validateRequest,
+  getApplicationDetails,
+);
+
+router.get(
+  "/see-applications/:id",
+  authenticateToken,
+  authorizeRoles("employer"),
+  getApplicationsValidation,
+  validateRequest,
+  getJobApplications,
+);
+
+router.put(
+  "/:applicationId/status",
+  authenticateToken,
+  authorizeRoles("employer"),
+  updateApplicationStatusValidator,
+  validateRequest,
+  updateApplicationStatus,
+);
 
 export default router;

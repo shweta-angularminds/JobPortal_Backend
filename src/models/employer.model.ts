@@ -6,7 +6,7 @@ export const employerSchema = new Schema<employer>(
     employer_name: {
       type: String,
       required: true,
-      unique: true,
+     
     },
     email: {
       type: String,

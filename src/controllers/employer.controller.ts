@@ -1,214 +1,75 @@
-import {
-  STATUS_BAD_REQUEST,
-  STATUS_INTERNAL_SERVER_ERROR,
-  STATUS_NOT_FOUND,
-  STATUS_OK,
-  STATUS_UNAUTHORIZED,
-} from "../constants/status/http.status";
 import { Request, Response } from "express";
-import { employerModel } from "../models/employer.model";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
-interface MulterRequest extends Request {
-  file: Express.Multer.File;
-}
+import { GetEmployersQuery } from "../constants/interfaces/employer.interface";
+import { STATUS_OK } from "../constants/status/http.status";
 
-export const employerProfile = async (req: Request, res: Response) => {
-  try {
-    res.status(STATUS_OK).json({ user: req.user });
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Error fetching profile", error });
-  }
-};
+import {
+  changePasswordService,
+  getAllEmployersService,
+  getEmployerByIdService,
+  getProfileService,
+  updateProfileService,
+} from "../services/employer.service";
 
-export const updateEmployerDetails = async (
-  req: Request & { file?: Express.Multer.File },
-  res: Response,
-) => {
-  const user = req.user;
-  if (!user || !user.id) {
-    return res
-      .status(STATUS_UNAUTHORIZED)
-      .send({ message: "User not authenticated." });
-  }
+import { asyncHandler } from "../utils/asyncHandler";
 
-  const userId = user.id;
+export const getAllEmployers = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { page = "1", limit = "10", search } = req.query as GetEmployersQuery;
 
-  const { employer_name, email, companyName, contactNumber, address, website } =
-    req.body;
+    const employers = await getAllEmployersService({
+      page: Number(page),
+      limit: Number(limit),
+      search,
+    });
+    res.status(STATUS_OK).json(employers);
+  },
+);
 
-  if (!employer_name) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Employer name is required!" });
-  }
-  if (!email) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Email is required!" });
-  }
-  if (!companyName) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Company name is required!" });
-  }
-  if (!contactNumber) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Contact number is required!" });
-  }
-  if (!address) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Address is required!" });
-  }
-  if (!website) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "Website url is required!" });
-  }
+export const employerProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    const employer = await getProfileService(req.user!.id);
 
-  let companyLogo = req.body.companyLogo;
+    return res.status(STATUS_OK).json({
+      success: true,
+      data: employer,
+    });
+  },
+);
 
-  if (req.file) {
-    companyLogo = req.file.path;
-  }
+export const updateEmployerDetails = asyncHandler(
+  async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+    const userId = req.user!.id;
 
-  try {
-    const updatedEmployer = await employerModel.findByIdAndUpdate(
-      userId,
-      {
-        employer_name: employer_name,
-        email: email,
-        companyName: companyName,
-        companyLogo: companyLogo,
-        contactNumber: contactNumber,
-        address: address,
-        website: website,
-      },
-      { new: true },
-    ).select("-password");
+    const companyLogo = req.file?.path ?? req.body.companyLogo;
 
-    if (!updatedEmployer) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: "Employer not found" });
-    }
+    const employer = await updateProfileService(userId, req.body, companyLogo);
 
-    const secretKey = process.env.SECRET_KEY;
-
-    if (!secretKey) {
-      return res
-        .status(STATUS_INTERNAL_SERVER_ERROR)
-        .send("Secret key is missing from environment variables");
-    }
-
-    const token = jwt.sign(
-      {
-        id: updatedEmployer._id,
-        email: updatedEmployer.email,
-        employer_name: updatedEmployer.employer_name,
-        companyName: updatedEmployer.companyName,
-        contactNumber: updatedEmployer.contactNumber,
-        address: updatedEmployer.address,
-        website: updatedEmployer.website,
-        companyLogo: updatedEmployer.companyLogo,
-      },
-      secretKey,
-      { expiresIn: "1d" },
-    );
-
-    res.status(STATUS_OK).json({
+    return res.status(STATUS_OK).json({
       message: "Profile updated successfully",
-      updatedEmployer,
-      token,
+      data: employer,
     });
-  } catch (error) {
-    res.status(STATUS_INTERNAL_SERVER_ERROR).json({
-      message: "An error occurred while updating employer",
-      error: error,
+  },
+);
+
+export const changePassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+
+    await changePasswordService(userId, req.body);
+
+    return res.status(STATUS_OK).json({
+      message: "Password updated successfully",
     });
-  }
-};
+  },
+);
 
-export const changePassword = async (req: Request, res: Response) => {
-  const { password, newPassword } = req.body;
-  const user = req.user;
+export const getEmployerById = asyncHandler(
+  async (req: Request, res: Response) => {
+    const employer = await getEmployerByIdService(req.params.id);
 
-  if (!user || !user.id) {
-    return res.status(STATUS_UNAUTHORIZED).send("User not authenticated.");
-  }
-
-  const userId = user.id;
-
-  try {
-    const foundUser = await employerModel.findById(userId);
-    if (!foundUser) {
-      return res.status(STATUS_UNAUTHORIZED).send("User not found!");
-    }
-
-    const isMatch = await bcrypt.compare(password, foundUser.password);
-
-    if (!isMatch) {
-      return res.status(STATUS_UNAUTHORIZED).send("Invalid password!");
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    foundUser.password = hashedPassword;
-
-    await foundUser.save();
-
-    res.status(STATUS_OK).json({ message: "Password updated successfully!" });
-  } catch (error) {
-    res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ error: "An error occurred while updating the password." });
-  }
-};
-
-export const getAllEmployers = async (req: Request, res: Response) => {
-  try {
-    const {search} = req.query
-
-    let query:any = {}
-    if(search){
-      query.companyName = {$regex:search,$options:"i"}
-    }
-
-    const employers = await employerModel
-      .find(query)
-      .select("-password -createdAt -updatedAt -__v");
-    
-    res.json(employers);
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal server error" });
-  }
-};
-
-export const getEmployerById = async (req: Request, res: Response) => {
-  try {
-    const employerId = req.params.id;
-    const employer = await employerModel
-      .findById(employerId)
-      .select("-password -createdAt -updatedAt -__v");
-
-    if (!employer) {
-      return res
-        .status(STATUS_NOT_FOUND)
-        .json({ message: `Employer not found with ID - ${employerId}` });
-    }
-
-    return res.status(STATUS_OK).send(employer);
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Unexpected error occurred!" });
-  }
-};
+    return res.status(STATUS_OK).json({
+      data: employer,
+    });
+  },
+);

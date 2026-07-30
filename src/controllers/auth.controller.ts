@@ -1,247 +1,83 @@
-import {
-  STATUS_BAD_REQUEST,
-  STATUS_CREATED,
-  STATUS_DUPLICATE_KEY_ERROR,
-  STATUS_INTERNAL_SERVER_ERROR,
-  STATUS_OK,
-  STATUS_UNAUTHORIZED,
-} from "../constants/status/http.status";
-import { employerModel } from "../models/employer.model";
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import JobSeekerDetailsModel from "../models/jobseeker_details.model";
-import UserModel from "../models/user.model";
 
-interface MulterRequest extends Request {
-  file: Express.Multer.File;
-}
+import { STATUS_CREATED, STATUS_OK } from "../constants/status/http.status";
 
-export const employerLogin = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  try {
-    const user = await employerModel.findOne({ email: email });
+import {
+  employerLoginService,
+  jobSeekerLoginService,
+  jobSeekerRegisterService,
+  registerEmployerService,
+} from "../services/auth.service";
 
-    if (!user) {
-      return res.status(STATUS_UNAUTHORIZED).send("User not found!");
-    }
+import { asyncHandler } from "../utils/asyncHandler";
+import { generateAccessToken } from "../utils/jwt.utils";
 
-    const isMatch = await bcrypt.compare(password, user.password);
+export const employerLogin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email, password } = req.body;
 
-    if (!isMatch) {
-      return res.status(STATUS_UNAUTHORIZED).send("Invalid Password!");
-    }
+    const employer = await employerLoginService(email, password);
 
-    const secretKey = process.env.SECRET_KEY;
-
-    if (!secretKey) {
-      return res
-        .status(STATUS_INTERNAL_SERVER_ERROR)
-        .send("Secret key is missing from environment variables");
-    }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        employer_name: user.employer_name,
-        companyName: user.companyName,
-        contactNumber: user.contactNumber,
-        email: user.email,
-        companyLogo: user.companyLogo,
-        address: user.address,
-        website: user.website,
-      },
-      secretKey,
-      {
-        expiresIn: "6h",
-      }
-    );
+    const token = generateAccessToken({
+      sub: employer._id.toString(),
+      role: "employer",
+    });
 
     res.status(STATUS_OK).json({
+      success: true,
       message: "Login successful!",
       token: token,
     });
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Unknown error occured", error: error });
-  }
-};
+  },
+);
 
-export const employerRegister = async (
-  req: Request & { file?: Express.Multer.File },
-  res: Response,
-) => {
-  const {
-    employer_name,
-    email,
-    companyName,
-    contactNumber,
-    address,
-    website,
-    password,
-  } = req.body;
-
-  if (
-    !employer_name ||
-    !email ||
-    !companyName ||
-    !contactNumber ||
-    !address ||
-    !website ||
-    !password ||
-    !req.file
-  ) {
-    return res
-      .status(STATUS_BAD_REQUEST)
-      .json({ message: "All fields and company logo are required!" });
-  }
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newEmployer = new employerModel({
-      employer_name,
-      email,
-      companyName,
-      companyLogo: req.file.path,
-      contactNumber,
-      address,
-      website,
-      password: hashedPassword,
-    });
-
-    await newEmployer.save();
+export const employerRegister = asyncHandler(
+  async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+    const employer = await registerEmployerService(req.body, req.file!.path);
 
     return res.status(STATUS_CREATED).json({
-      message: "Employer registered successfully!",
-      logoUrl: req.file.path,
+      message: "Employer registered successfully",
+      data: employer,
     });
-  } catch (error: any) {
-    if (error.code === STATUS_DUPLICATE_KEY_ERROR) {
-      return res.status(STATUS_BAD_REQUEST).json({
-        message: "Duplicate key error: This employer already exists.",
-        error: error,
-      });
-    }
+  },
+);
 
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Internal server error", error: error });
-  }
-};
+export const jobseekerRegister = asyncHandler(
+  async (req: Request, res: Response) => {
+    const fresher = req.body.fresher === "true";
 
-export const jobseekerRegister = async (req: Request, res: Response) => {
-  
-  
-  const { username, phone, email, password } = req.body;
-
-  const fresher = req.body.fresher === "true";
-
-  const resumeFile = req.file;
-
-  try {
-    if (!username || !password || !phone || !email || !resumeFile) {
-      return res
-        .status(STATUS_BAD_REQUEST)
-        .json({ message: "All fields are required" });
-    }
-
-    const userExists = await UserModel.findOne({ email });
-
-    if (userExists) {
-      return res
-        .status(STATUS_DUPLICATE_KEY_ERROR)
-        .json({ error: "User already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new UserModel({
-      username,
-      phone,
-      email,
+    const user = await jobSeekerRegisterService({
+      username: req.body.username,
+      phone: req.body.phone,
+      email: req.body.email,
+      password: req.body.password,
       fresher,
-      password: hashedPassword,
-      resume: resumeFile ? resumeFile.path : "",
+      resume: req.file?.path,
     });
 
-    const savedUser = await newUser.save();
-
-    const newJobSeekerDetails = new JobSeekerDetailsModel({
-      User_id: savedUser._id,
-      languages: [],
-      skills: [],
-      education: {},
-      summary: "",
-      internship: {},
-      preference: {},
+    return res.status(STATUS_CREATED).json({
+      success: true,
+      message: "User registered successfully",
+      data: user,
     });
+  },
+);
 
-    newJobSeekerDetails.education = {};
+export const jobseekerLogin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email, password } = req.body;
 
-    await newJobSeekerDetails.save();
+    const user = await jobSeekerLoginService(email, password);
 
-    res
-      .status(STATUS_CREATED)
-      .json({ message: "User registered successfully", user: newUser });
-  } catch (err:any) {
-    
-    res.status(STATUS_INTERNAL_SERVER_ERROR).json({ error: err, message: err.message });
-  }
-};
-
-export const jobseekerLogin = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await UserModel.findOne({ email: email });
-
-    if (!user) {
-      return res.status(STATUS_UNAUTHORIZED).send("User not found!");
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(STATUS_UNAUTHORIZED).send("Invalid Password!");
-    }
-
-    const secretKey = process.env.SECRET_KEY;
-
-    if (!secretKey) {
-      return res
-        .status(STATUS_INTERNAL_SERVER_ERROR)
-        .send("Secret key is missing from environment variables");
-    }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        contactNumber: user.phone,
-        fresher: user.fresher,
-        resume: user.resume,
-        location: user.location,
-        gender: user.gender,
-        bdate: user.bdate,
-        profilePic: user.profilePic,
-      },
-      secretKey,
-      {
-        expiresIn: "1d",
-      }
-    );
+    const token = generateAccessToken({
+      sub: user._id.toString(),
+      role: "jobseeker",
+    });
 
     res.status(STATUS_OK).json({
+      success: true,
       message: "Login successful!",
       token: token,
     });
-  } catch (error) {
-    return res
-      .status(STATUS_INTERNAL_SERVER_ERROR)
-      .json({ message: "Unknown error occured", error: error });
-  }
-};
- 
+  },
+);

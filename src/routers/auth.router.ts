@@ -1,6 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Router } from "express";
 
 import {
@@ -11,32 +8,45 @@ import {
 } from "../controllers/auth.controller";
 import uploadImage from "../middleware/uploadImage";
 import uploadResume from "../middleware/uploadResume";
+import {
+  jobSeekerRegisterValidator,
+  loginValidation,
+  registerEmployerValidator,
+} from "../validations/auth.validator";
+import { validateRequest } from "../middleware/validation.middleware";
+import { validateResume } from "../validations/resume.validator";
+import { validateCompanyLogo } from "../validations/profilePicture.validator";
+
+// API documentation for these routes lives in `src/docs/auth.docs.ts`
+// and reuses schemas from `src/docs/schemas/auth.schema.ts`.
 
 const router = Router();
 
-router.post("/employer/login", employerLogin);
-router.post("/employer/register", uploadImage("companyLogo"), employerRegister);
+router.post("/employer/login", loginValidation, validateRequest, employerLogin);
 
+router.post(
+  "/employer/register",
+  uploadImage("companyLogo"),
+  validateCompanyLogo,
+  registerEmployerValidator,
+  validateRequest,
+  employerRegister,
+);
+
+router.post(
+  "/jobseeker/login",
+  loginValidation,
+  validateRequest,
+  jobseekerLogin,
+);
 
 router.post(
   "/jobseeker/register",
-  (req, res, next) => {
-    uploadResume(req, res, function (err: any) {
-      if (err) {
-        console.error("Upload error:", err);
-
-        return res.status(400).json({
-          success: false,
-          message: err.message || "File upload failed",
-        });
-      }
-      next();
-    });
-  },
+  uploadResume,
+  validateResume,
+  jobSeekerRegisterValidator,
+  validateRequest,
   jobseekerRegister,
 );
-
-
-router.post("/jobseeker/login", jobseekerLogin);
 
 export default router;

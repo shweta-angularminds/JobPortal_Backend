@@ -1,188 +1,22 @@
 import mongoose, { Schema } from "mongoose";
-import {
-  Experience,
-  InternShip,
-  Jobseeker_details,
-  Preference,
-} from "../constants/interfaces/user.interface";
+import { Jobseeker_details } from "../constants/interfaces/jobseeker.interface";
+import { InternshipSchema } from "./schemas/internship.schema";
+import { ExperienceSchema } from "./schemas/experience.schema";
+import { PreferenceSchema } from "./schemas/preference.schema";
+import { educationSchema } from "./schemas/education.schema";
 
-const educationSchema = new Schema(
-  {
-    X: {
-      board_name: { type: String, required: false, default: "" },
-      passing_year: { type: String, required: false, default: "" },
-      medium: { type: String, required: false, default: "" },
-      percentage: { type: String, required: false, default: "" },
-    },
-    XII: {
-      board_name: { type: String, required: false, default: "" },
-      passing_year: { type: String, required: false, default: "" },
-      medium: { type: String, required: false, default: "" },
-      percentage: { type: String, required: false, default: "" },
-    },
-    graduation: {
-      course_name: { type: String, required: false, default: "" },
-      college_name: { type: String, required: false, default: "" },
-      university: { type: String, required: false, default: "" },
-      percentage: { type: String, required: false, default: "" },
-      cgpa: { type: String, required: false, default: "" },
-      start_year: { type: String, required: false, default: "" },
-      end_year: { type: String, required: false, default: "" },
-    },
-    postgraduation: {
-      course_name: { type: String, required: false, default: "" },
-      college_name: { type: String, required: false, default: "" },
-      university: { type: String, required: false, default: "" },
-      percentage: { type: String, required: false, default: "" },
-      cgpa: { type: String, required: false, default: "" },
-      start_year: { type: String, required: false, default: "" },
-      end_year: { type: String, required: false, default: "" },
-    },
-    doctorate: {
-      course_name: { type: String, required: false, default: "" },
-      college_name: { type: String, required: false, default: "" },
-      university: { type: String, required: false, default: "" },
-      percentage: { type: String, required: false, default: "" },
-      cgpa: { type: String, required: false, default: "" },
-      start_year: { type: String, required: false, default: "" },
-      end_year: { type: String, required: false, default: "" },
-    },
-  },
-  {
-    _id: false,
-  }
-);
-const PreferenceSchema = new Schema<Preference>(
-  {
-    job_type: {
-      type: [String],
-      enum: ["internship", "job"],
-      default: [],
-    },
-    join_time: {
-      type: String,
-      required: false,
-      enum: [
-        "15 days",
-        "1 month",
-        "2 months",
-        "3 months",
-        "more than 3 months",
-      ],
-      default: "1 month",
-    },
-    locations: {
-      type: [String],
-      enum: [
-        "mumbai",
-        "pune",
-        "delhi",
-        "hyderabad",
-        "chennai",
-        "bangalore",
-        "chandigarh",
-        "kolkata",
-        "gurgaon",
-        "ahemdabad",
-      ],
-      default: [],
-    },
-  },
-  {
-    _id: false,
-  }
-);
-const InternshipSchema = new Schema<InternShip>(
-  {
-    project_name: {
-      type: String,
-
-      default: "",
-    },
-    company_name: {
-      type: String,
-
-      default: "",
-    },
-    desc: {
-      type: String,
-
-      default: "",
-    },
-    skills: {
-      type: [String],
-      required: false,
-      default: [],
-    },
-    project_URL: {
-      type: String,
-      required: false,
-      default: "",
-    },
-    duration: {
-      type: String,
-
-      default: "",
-    },
-  },
-  {
-    _id: false,
-  }
-);
-
-
-const ExperienceSchema = new Schema<Experience>({
-  companyName:{
-    type:String,
-    required:true,
-  },
-  jobTitle:{
-    type:String,
-    required:true,
-  },
-  location:{
-    type:String,
-    default:'',
-  },
-  employmentType:{
-    type:String,
-    enum:["Full-time","Part-time","Internship","Contract"]
-  },
-  startDate:{
-    type:Date,
-    required:true,
-  },
-  endDate:{
-    type:Date
-  },
-  isCurrentJob:{
-    type:Boolean,
-    default:false,
-  },
-  description:
-  {
-    type:String,
-    default:""
-  },
-  technologiesUsed:{
-    type:[String],
-    default:[]
-  },
-  achievements:{
-    type:[String],
-    default:[]
-  }
-})
-
-// Main schema for JobseekerDetails
 export const JobSeekerDetailsSchema = new Schema<Jobseeker_details>(
   {
     User_id: {
       type: Schema.Types.ObjectId,
       ref: "users",
       required: true,
+      unique: true,
     },
-    education: educationSchema,
+    education: {
+      type: educationSchema,
+      default: () => ({}),
+    },
     languages: {
       type: [String],
       default: [],
@@ -196,20 +30,26 @@ export const JobSeekerDetailsSchema = new Schema<Jobseeker_details>(
 
       default: "",
     },
-    internship: InternshipSchema,
-    preference: PreferenceSchema,
-    experience:{
-      type:[ExperienceSchema],
-      default:[]
-    }
+    internship: {
+      type: InternshipSchema,
+      default: () => ({}),
+    },
+    preference: {
+      type: PreferenceSchema,
+      default: () => ({}),
+    },
+    experience: {
+      type: [ExperienceSchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 const JobSeekerDetailsModel = mongoose.model<Jobseeker_details>(
   "jobseekerDetails",
-  JobSeekerDetailsSchema
+  JobSeekerDetailsSchema,
 );
 
 export default JobSeekerDetailsModel;
