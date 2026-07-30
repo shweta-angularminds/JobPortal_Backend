@@ -63,6 +63,7 @@ export const getJobById = asyncHandler(async (req: Request, res: Response) => {
 
 export const listJobsByEmployer = asyncHandler(
   async (req: Request, res: Response) => {
+    console.log("welcome")
     const { employerId } = req.params;
     const { experience, department } = req.query;
 
